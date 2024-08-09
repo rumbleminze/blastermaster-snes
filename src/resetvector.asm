@@ -12,7 +12,7 @@ PLB
 JSL $A08000
 
 ; this needs to be the NES game's reset vector
-JML $A1FFE0
+JML $A1FFF4
 nmi:
     PHP
     PHA
@@ -29,16 +29,17 @@ nmi:
     PHA
     PLB
 
-    ; This assume the NES NMI is at $C000
-    LDA #$C0
+    ; This assume the NES NMI is at $EB7E
+    LDA #$EB
     STA BANK_SWITCH_HB
-    LDA #$00
+    LDA #$7E
     STA BANK_SWITCH_LB
     JML [BANK_SWITCH_LB]
 
 return_from_nes_nmi:
+    jslb setup_hdma, $a0
     ; handle sprite traslation last, since if that bleeds out of vblank it's ok
-    jslb translate_8by8only_nes_sprites_to_oam, $a0
+    jslb translate_blaster_master_sprites, $a0
     PLY
     PLX
     PLA

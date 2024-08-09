@@ -132,8 +132,6 @@ swap_data_bg_chr:
   LDA #$60
   STA TARGET_BANK_OFFSET
   JMP bankswap_start
-
-
 check_for_bg_chr_bankswap:
   LDA BG_CHR_BANK_SWITCH
   CMP #$FF
@@ -146,6 +144,9 @@ check_for_bg_chr_bankswap:
   BEQ :-
 
 bankswap_start:
+  PHA
+  PHY
+  PHX 
   LDA NMITIMEN_STATE
   AND #$7F
   STA NMITIMEN
@@ -158,15 +159,9 @@ bankswap_start:
 : LDA RDNMI
   AND #$80
   BEQ :-
-
-  ; LDA #$80
-  ; STA INIDISP
-  ; STZ TM
   
   LDA BG_CHR_BANK_SWITCH
   STA BG_CHR_BANK_CURR
-  ; LDA #$FF
-  ; STA OBJ_CHR_BANK_SWITCH
 
   PHB
   LDA #$A0
@@ -216,7 +211,8 @@ bankswap_start:
   STZ VMADDL
   STZ TARGET_BANK_OFFSET
 
-  LDA #$02
+  LDA DMA_ENABLED_STATE
+  ORA #$02
   STA MDMAEN
   PLB
   LDA VMAIN_STATE
@@ -232,71 +228,33 @@ bankswap_start:
   ; STA TM
   ; LDA INIDISP_STATE
   ; STA INIDISP
-
-  RTL
-
-bankswitch_bg_chr_data:
-  PHB
-  LDA #$A0
-  PHA
-  PLB
-
-  ; bgs are on 1000, 3000, 5000, 7000.
-  LDY #$01
-: LDA CHR_BANK_LOADED_TABLE, y
-  CMP CHR_BANK_BANK_TO_LOAD
-  BEQ switch_bg_to_y
-  CPY #$07
-  BEQ new_bg_bank
-  INY
-  INY
-  BRA :-
-  RTL
-
-new_bg_bank:
-
-  LDA CHR_BANK_BANK_TO_LOAD
+  PLX
+  PLY
+  PLA
   
-  CMP #$19
-  BPL new_data_bank
-  PLB
-  RTL
-
-switch_bg_to_y:
-  TYA
-  ORA #$10
-  STA BG12NBA
-
-  PLB
-  RTL
-new_data_bank:
-
-  STZ CHR_BANK_TARGET_BANK
-  INC CHR_BANK_TARGET_BANK
-  jslb load_chr_table_to_vm, $a0
-
-  PLB
   RTL
 
 bankswitch_obj_chr_data:
-  ; this is a hack that happens to work most of the time.
   PHB
   LDA #$A0
   PHA
   PLB
 
   LDY #$00
-: LDA CHR_BANK_LOADED_TABLE, y
+: CPY #$01
+  BEQ skip_bg_vram
+  CPY #$02
+  BEQ skip_bg_vram
+  LDA CHR_BANK_LOADED_TABLE, y
   CMP CHR_BANK_BANK_TO_LOAD
   BEQ switch_to_y
-  CPY #$06
+  CPY #$07
   BEQ new_obj_bank
-  INY
+skip_bg_vram:
   INY
   BRA :-
 
 new_obj_bank:
-  ; todo load the bank into 0000, 4000, or 6000
   LDA INIDISP_STATE
   ORA #$80
   STA INIDISP
@@ -329,8 +287,12 @@ switch_to_y:
   ; our target bank is loaded at #$y000
   ; so just update our obj definition to use that for sprites
   TYA
+  STZ OBJ_CHR_HB
+  CLC
   LSR ; for updating obsel, we have to halve y.  
-  STA OBSEL
+  BCC :+
+  INC OBJ_CHR_HB
+: STA OBSEL
   PLB
   RTL
 

@@ -33,39 +33,15 @@ no_scroll_screen_enable:
   AND #$FC                 
   STA PPU_CONTROL_STATE
   RTL 
-
-update_screen_scroll:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  BEQ :+
-  LDA #$01
-  STA HOFS_HB
-
-: STA BG1HOFS
-  LDA HOFS_LB
-  STA BG1HOFS
-
-  LDA BG_SCREEN_INDEX
-  AND #$02
-  BEQ :+
-  LDA #$02
-  STA VOFS_HB
-: STA BG1VOFS
-  LDA VOFS_LB
-  STA BG1VOFS
-
-  RTL
-
 infidelitys_scroll_handling:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  ORA PPU_CONTROL_STATE
+
+  LDA PPU_CONTROL_STATE
   PHA 
   AND #$80
   BNE :+
-  LDA #$01
+  LDA #$00
   BRA :++
-: LDA #$81
+: LDA #$80
 : STA NMITIMEN
   PLA        
   PHA 
@@ -101,6 +77,7 @@ infidelitys_scroll_handling:
   ; STA VOFS_HB
 : RTL 
 
+
 setup_hdma:
   LDX VOFS_LB
   LDA $A0A080,X
@@ -120,141 +97,61 @@ setup_hdma:
   STA $0901
   STA $0906
   STA $090B
-  lda BG_SCREEN_INDEX
-  and #$01
-  ora PPU_CONTROL_STATE
+  
+  lda PPU_CONTROL_STATE
   STA $0902
   STA $0907
   STA $090C
-  lda BG_SCREEN_INDEX
-  and #$01
-  LDX PPU_CONTROL_STATE
-  
+
+  LDX PPU_CONTROL_STATE  
   LDA $A0A610,X
   STA $0904
   STA $0909
   STA $090E
-  ; STZ $090B
   STZ $090F
 
   RTL
 
-scroll_rollover:
-  LDA #$EF  
-  STA $FD
+default_scrolling_hdma_values:
+.byte $6F, $00, $92, $00, $C9, $58, $00, $92, $00, $C9, $27, $00, $00, $00, $01, $00
 
-  LDA $5C
-  ORA #$80
-  STA $5C
+set_scrolling_hdma_defaults:
 
-  ; we have to update PPU_STORE here because we use it almost immediately
-  ; in the hdma routine
-  JSR flip_bg1_bit
-
-  RTL
-
-title_screen_rollover:
-  LDA #$00
-  STA $14
-  STA $15
-  LDA $1A
-  EOR #$01
-  STA $1A
-  LDA #$00
-  STA $FD
-  JSR flip_bg1_bit
-
-  RTL
-
-flip_bg1_bit:
-  LDA BG_SCREEN_INDEX
-  EOR #$02  
-  STA BG_SCREEN_INDEX
-  RTS
-
-
-handle_horizontal_scroll_wrap:
-  INC $1B
-
-  LDA BG_SCREEN_INDEX
-  EOR #$01
-  STA BG_SCREEN_INDEX
-
-  LDA $5C
-  ORA #$80
-  STA $5C
-
-  RTL
-
-
-; copy of 02:AC47
-horizontal_attribute_scroll_handle:
-  JSR nes_02_ada9_copy
-  LDY #$00
-  STZ COL_ATTR_VM_COUNT
-  STZ COL_ATTR_LB_SET
-
-: INC COL_ATTR_VM_COUNT
-  TYA
-  ASL A
-  ASL A
-  ASL A
-  CLC
-  ADC $00
-  STA $03
-  CLC
-  ADC #$C0
-  PHA
-  LDA $1B
-  EOR #$01
+  LDA $3D
+  AND #$04
+  BEQ :+
+  LDA $3E
   AND #$01
-  ASL A
-  ASL A
-  ORA #$23  
+  BEQ :+
+  jmp simple_scrolling
+
+: PHY
+  PHB
+  LDA #$A0
   PHA
-  LDA COL_ATTR_LB_SET
-  BNE :+
-  PLA
-  STA COL_ATTR_VM_HB
-  PLA  
-  STA COL_ATTR_VM_LB  
-  INC COL_ATTR_LB_SET
-  BRA :++
-: PLA  
-  PLA
-: LDX $03
-  LDA $03B0,X
-  STA COL_ATTR_VM_START, Y
+  PLB
+  LDY #$00
+: LDA default_scrolling_hdma_values, Y
+  CPY #$0f
+  BEQ :+
+  STA SCROLL_HDMA_START, Y
   INY
-  CPY #$08
-  BCC :---
-  LDA #$00
+  BRA :-
 
-  STA COL_ATTR_VM_START, Y
-  INC COL_ATTR_HAS_VALUES
-  ; would normall do this during screen but for now just do it in line
-  JSR convert_column_of_tiles
-
+: PLB
+  PLY
   RTL
 
-nes_02_ada9_copy:
-  LDA #$00
-  STA $00
-  LDA $FE
-  AND #$E0
-  ASL A
-  ROL $00
-  ASL A
-  ROL $00
-  ASL A
-  ROL $00
-  RTS
-
-credits_scroll_rollover:
-  INC $1A
-  LDA #$00
-  STA $FD
-  PHA
-  JSR flip_bg1_bit
-  PLA
+  ; used where we just want to set the scroll to 0,0 and not worry about 
+; attributes, because they'll naturally be offscreen
+simple_scrolling:
+  LDA #$08
+  STA BG1VOFS
+  LDA #$01
+  STA BG1VOFS
+  STZ BG1HOFS
+  STZ BG1HOFS
+  STZ SCROLL_HDMA_START
+  STZ SCROLL_HDMA_START + 1
+  STZ SCROLL_HDMA_START + 2
   RTL

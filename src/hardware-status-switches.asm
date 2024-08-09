@@ -113,13 +113,6 @@ set_sp_to_1bf_reload_ppucontrol:
   PHA
   RTL 
 
-update_ppu_control_from_fd_ff:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  ORA PPU_CONTROL_STATE
-  jslb update_ppu_control_values_from_a, $a0
-  RTL
-
 prg_bank_swap_to_a:
   ; save off xya
   STX BANK_SWITCH_X
@@ -165,7 +158,7 @@ store_90_to_nmi_and_ppu_control_states:
 
 reset_ppu_control_values:
   LDA PPU_CONTROL_STATE
-  jslb update_ppu_control_values_from_a, $a0
+  jslb update_ppu_control_from_a, $a0
   RTL
 
 set_ppu_control_and_mask_to_0:
@@ -179,7 +172,7 @@ set_ppu_control_and_mask_to_0:
 
     RTL
 
-update_ppu_control_values_from_a:
+update_ppu_control_from_a:
     ; we only care about a few values for ppu control
     ; these bits Nxxx xIAA
     ; N = NMI enabled
@@ -222,26 +215,31 @@ update_ppu_control_values_from_a:
     BEQ hvoffset01
 
  hvoffset00:   
-    bra ret_from_update_ppu_control_values_from_a
+    bra ret_from_update_ppu_control_from_a
 
  hvoffset01:  
     INC HOFS_HB
-    bra ret_from_update_ppu_control_values_from_a
+    bra ret_from_update_ppu_control_from_a
  
  hvoffset10:  
     INC VOFS_HB
-    bra ret_from_update_ppu_control_values_from_a
+    bra ret_from_update_ppu_control_from_a
  
  hvoffset11:  
     INC HOFS_HB
     INC VOFS_HB
     
 
-ret_from_update_ppu_control_values_from_a:
+ret_from_update_ppu_control_from_a:
     ; LDA INIDISP_STATE
     ; STA INIDISP
     pla
     RTL
+
+update_ppu_control_from_a_and_store:
+    STA PPU_CONTROL_STATE
+    jslb update_ppu_control_from_a, $a0
+    rtl
 
 set_ppu_control_to_0_and_store:
     LDA #$00
@@ -272,10 +270,29 @@ update_ppu_control_store_to_10:
     STZ NMITIMEN_STATE
     RTL
 
+set_ppu_mask_to_00:
+    ; STZ PPU_MASK_STATE
+    STZ TM
+    jslb force_blank_and_store, $a0
+    rtl
+
 set_ppu_mask_to_stored_value:
     LDA TM_STATE
     STA TM
+    BEQ :+
+    LDA #$0F
+    STA INIDISP
     RTL
+:   jslb force_blank_and_store, $a0
+    RTL
+
+set_ppu_mask_to_accumulator_and_store:
+
+    sta PPU_MASK_STATE
+    CMP #$00
+    BNE set_ppu_mask_to_accumulator
+    STZ TM_STATE
+    BRA set_ppu_mask_to_00
 
 set_ppu_mask_to_accumulator:
     PHA
@@ -309,13 +326,6 @@ update_vh_write_by_0b:
   STA VMAIN
 
   RTL
-
-update_ppu_mask_to_00_store:
-    LDA #$00
-    STA PPU_MASK_STATE
-    ; turns on BG and sprites
-    jslb update_values_for_ppu_mask, $a0
-    RTL
 
 update_ppu_mask_store_to_1e:
     LDA #$1E
@@ -369,11 +379,13 @@ enable_nmi_and_store:
     STA PPU_CONTROL_STATE
 
     ; not sure on this
+    LDA PPU_MASK_STATE
+    BEQ :+
     LDA INIDISP_STATE
     AND #$7F
     STA INIDISP
     STA INIDISP_STATE
-
+    :
     RTL
 
 enable_nmi:
@@ -495,3 +507,52 @@ disable_nmi_and_fblank_no_store:
     jslb force_blank_no_store, $a0
     jslb disable_nmi_no_store, $a0
     RTL
+    
+handle_mmc1_control_register:
+  STA BANK_SWITCH_CTRL_REGS
+  AND #$03
+  CMP #$03
+  BNE :+
+  LDA #$22
+  BRA :++
+: LDA #$21  
+: STA BG1SC
+  STZ $3B
+  LDA PPU_CONTROL_STATE
+  jslb update_ppu_control_from_a, $a0
+  jslb set_scrolling_hdma_defaults, $a0
+  rtl
+
+
+vmaddh_range:
+.byte $20, $21, $22, $23, $20, $21, $22, $23, $24, $25, $26, $27, $24, $25, $26, $27
+
+store_vmaddh_to_proper_range:
+  PHA
+  LDA BANK_SWITCH_CTRL_REGS
+  AND #$01
+  BEQ store_vmaddh_for_vertical_mirroring
+
+  PLA
+  CMP #$28
+  BMI :+
+  AND #$23
+  ORA #$04
+  BRA store
+
+: CMP #$24
+  BMI store
+  AND #$23
+
+store:
+  STA VMADDH
+  RTL
+
+store_vmaddh_for_vertical_mirroring:
+  PLA
+  ; 20-23 = 20-23
+  ; 24-27 = 24-27
+  ; 28-2B = 20-23
+  ; 2C-2F = 24-27
+  AND #$27
+  BRA store

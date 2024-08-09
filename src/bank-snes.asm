@@ -203,7 +203,7 @@ intro_done:
   
   JSR setup_hide_left_8_pixel_window
   JSL disable_hide_left_8_pixel_window
-  JSR clearvm_to_12
+  JSR clearvm_to_empty
   JSR write_default_palettes
   JSR write_stack_adjustment_routine_to_ram
   JSR write_sound_hijack_routine_to_ram
@@ -211,7 +211,34 @@ intro_done:
   LDA #$A1
   PHA
   PLB 
-  JML $A1FFE0
+
+  LDA #$00
+  LDY #$00
+
+: LDA #$00
+  STA $0000, Y
+  STA $0100, Y
+  STA $0200, Y
+  STA $0300, Y
+  STA $0400, Y
+  STA $0500, Y
+  STA $0600, Y
+  STA $0700, Y
+  DEY
+  BNE :-
+  
+  setAXY16
+  LDX #$01FF
+  TXS
+  setAXY8
+
+  LDA #$00
+  STA CHR_BANK_BANK_TO_LOAD
+  LDA #$01
+  STA CHR_BANK_TARGET_BANK
+  JSL load_chr_table_to_vm
+
+  JML $A1FFF4
 
 
   snes_nmi:
@@ -219,8 +246,7 @@ intro_done:
     
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
-    jslb update_screen_scroll, $a0 
-    jslb setup_hdma, $a0
+    ; jslb setup_hdma, $a0
 
     LDA #$7E
     STA A1B3
@@ -242,6 +268,7 @@ intro_done:
 clear_bg_jsl:
   jsr clear_bg
   rtl
+
 clear_bg:
 
   LDA #$80
@@ -279,8 +306,11 @@ clear_bg:
   RTS
 
 clearvm_jsl:
+  jslb disable_nmi_no_store, $a0
   jsr clearvm
+  jslb enable_nmi, $a0
   rtl
+
 clearvm:
   LDA #$80
   STA VMAIN
@@ -317,11 +347,11 @@ clearvm:
   STA VMAIN
   RTS
 
-clearvm_to_12_long:
-  JSR clearvm_to_12
+clearvm_to_empty_long:
+  JSR clearvm_to_empty
   RTL
 
-clearvm_to_12:
+clearvm_to_empty:
 
 : LDA RDNMI
   BPL :-
@@ -393,6 +423,12 @@ clear_buffers:
   STA $6600, y
   DEY
   BNE :-
+
+  LDA #$FF
+  LDY #$11
+: STA CHR_BANK_LOADED_TABLE - 1, Y
+  DEY
+  BNE :-
   RTS
 
 msu_movie_rti:
@@ -407,7 +443,7 @@ msu_movie_rti:
 
 
 dma_values:
-  .byte $00, $12
+  .byte $00, $00
 
 .if ENABLE_MSU = 1
   .include "msu_intro_screen.asm"

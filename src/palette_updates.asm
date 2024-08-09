@@ -1,3 +1,70 @@
+; moved logic from EBC0ish
+title_screen_palette_updates:
+  PHY
+  PHX
+  PHA
+
+  PHB
+  PHK
+  PLB
+
+  STZ CURR_PALETTE_ADDR
+  STZ CGADD
+
+  LDY #$00
+  LDX #$00
+
+title_palette_entry:
+  LDA $58, X
+  AND #$3F
+  TAY
+  LDA $EBF4,Y
+
+  ASL
+  TAY
+  LDA palette_lookup, Y
+  STA CGDATA
+  LDA palette_lookup + 1, Y
+  STA CGDATA
+
+  INX
+  TXA
+
+  AND #$03
+  BNE :+
+  jsr write_3_empty_rows
+: TXA
+  AND #$0F
+  CMP #$00
+  BNE :+
+  ; after 16 entries we write an empty set of palettes
+  jsr write_4_empty_entries
+: CPX #$20
+  BNE title_palette_entry
+
+  ; jsr make_first_palette_greyscale
+
+  PLB
+  PLA
+  PLX
+  PLY
+  RTL
+
+write_3_empty_rows:
+  CLC
+  LDA CURR_PALETTE_ADDR
+  ADC #$10
+  STA CGADD
+  STA CURR_PALETTE_ADDR
+  RTS
+
+write_4_empty_entries:
+  CLC
+  LDA CURR_PALETTE_ADDR
+  ADC #$40
+  STA CGADD
+  STA CURR_PALETTE_ADDR
+  rts
 
 write_palette_data:
   PHX
@@ -30,28 +97,15 @@ palette_entry:
   ; every 4 we need to write a bunch of empty palette entries
   TYA
   AND #$03
-  BNE skip_writing_three_rows
-
-  CLC
-  LDA CURR_PALETTE_ADDR
-  ADC #$10
-  STA CGADD
-  STA CURR_PALETTE_ADDR
-
-skip_writing_three_rows:
-  TYA
+  BNE :+
+  jsr write_3_empty_rows
+: TYA
   AND #$0F
   CMP #$00
-  BNE skip_writing_four_empties
+  BNE :+
   ; after 16 entries we write an empty set of palettes
-  CLC
-  LDA CURR_PALETTE_ADDR
-  ADC #$40
-  STA CGADD
-  STA CURR_PALETTE_ADDR 
-
-skip_writing_four_empties:
-  CPY #$20
+  jsr write_4_empty_entries
+: CPY #$20
   BNE palette_entry
 
   LDA ACTIVE_NES_BANK
@@ -78,6 +132,19 @@ zero_all_palette:
   BNE :-
 
   RTS
+
+greyscale_palette:
+.byte  $00, $00, $29, $25, $B5, $56, $FF, $7F
+make_first_palette_greyscale:
+  LDA #$00
+  sta CGADD
+  LDY #$00
+: LDA greyscale_palette, y
+  STA CGDATA
+  INY
+  CMP #$08
+  BNE :-
+  rts
 
 snes_sprite_palatte:
 ; .byte $D6, $10, $FF, $7F, $D6, $10, $00, $00, $91, $29, $CE, $39, $5B, $29, $35, $3A

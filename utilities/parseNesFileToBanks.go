@@ -23,7 +23,7 @@ import (
 //
 // with 16 bytes per line
 func main() {
-	inputFile := flag.String("in", "Chip 'n Dale Rescue Rangers (U) [!].nes", "input file to split out")
+	inputFile := flag.String("in", "Blaster Master (U) [!].nes", "input file to split out")
 
 	inputBytes, _ := ioutil.ReadFile(*inputFile)
 	var banks [][]byte
@@ -90,7 +90,6 @@ func main() {
 				tileset++
 			}
 
-			// if i < 14 || (byteIndex < 0x2000 && i == 14) {
 			// converts these to SNES expected format
 			bankFile.WriteString(
 				fmt.Sprintf(
@@ -115,33 +114,6 @@ func main() {
 				),
 			)
 			bankFile.WriteString(".byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00\n")
-			// If some of the banks in the PRG rom are actually data banks, then we need to _not_ format them at 4bpp.
-			// for Double Dragon all of the banks are just tile data.
-			// } else {
-			// 	// these are data banks that need to be formatted differently
-			// 	bankFile.WriteString(
-			// 		fmt.Sprintf(
-			// 			".byte $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00\n"+
-			// 				".byte $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00, $%02X, $00\n",
-			// 			banks[i][byteIndex],
-			// 			banks[i][byteIndex+1],
-			// 			banks[i][byteIndex+2],
-			// 			banks[i][byteIndex+3],
-			// 			banks[i][byteIndex+4],
-			// 			banks[i][byteIndex+5],
-			// 			banks[i][byteIndex+6],
-			// 			banks[i][byteIndex+7],
-			// 			banks[i][byteIndex+8],
-			// 			banks[i][byteIndex+9],
-			// 			banks[i][byteIndex+10],
-			// 			banks[i][byteIndex+11],
-			// 			banks[i][byteIndex+12],
-			// 			banks[i][byteIndex+13],
-			// 			banks[i][byteIndex+14],
-			// 			banks[i][byteIndex+15],
-			// 		),
-			// 	)
-			// }
 		}
 	}
 
