@@ -723,8 +723,10 @@ NOP ; TXS
 ; problem, messing with the stack with TXS
 .byte $E3
 
-LDX $01
-NOP ; TXS
+; LDX $01
+; NOP ; TXS
+jmp @set_stack_to_01
+@return_from_stack_set:
 RTS
 
 .byte $A9, $04, $85, $D5, $AD, $68, $E3, $85, $7A, $AD, $69
@@ -1007,9 +1009,31 @@ nops 16
 ;   STA $2000
   RTS
 
-.byte $A0, $00, $20, $49, $E9, $20, $F0, $E6, $20, $95, $E8, $20, $96
-.byte $E9, $F0, $0E, $30, $06, $20, $74, $E9, $4C, $5E, $E9, $20, $86, $E9, $4C, $5E
-.byte $E9, $4C, $3F, $E9, $48, $20, $96, $E9, $68, $48, $A5, $00, $20, $A2, $E9, $68
+; e953 - we'll need to completely rewrite this
+  
+  jslb load_full_screen_cutscene, $a0
+  jslb write_attributes_for_full_screen, $a0
+  RTS 
+  nops 24
+;   LDY #$00
+;   JSR $E949
+;   JSR $E6F0
+;   JSR $E895
+;   JSR $E996
+;   BEQ $A4E971
+;   BMI $A4E96B
+;   JSR $E974
+;   JMP $E95E
+;   JSR $E986
+;   JMP $E95E
+;   JMP $E93F
+
+
+; .byte $A0, $00, $20, $49, $E9, $20, $F0, $E6, $20, $95, $E8, $20, $96
+; .byte $E9, $F0, $0E, $30, $06, $20, $74, $E9, $4C, $5E, $E9, $20, $86, $E9, $4C, $5E
+; .byte $E9, $4C, $3F, $E9
+
+.byte $48, $20, $96, $E9, $68, $48, $A5, $00, $20, $A2, $E9, $68
 .byte $38, $E9, $01, $D0, $F4, $60, $48, $20, $96, $E9, $20, $A2, $E9, $68, $38, $E9
 .byte $01, $29, $7F, $D0, $F1, $60, $B1, $7A, $85, $00, $C8, $D0, $02, $E6, $7B, $A5
 .byte $00, $60
@@ -1355,16 +1379,16 @@ nops 1
 @nes_f1da:
   LDA RDNMI ; PpuStatus_2002
   LDA $0301,X
-
-
-
-;   STA VMADDH ; PpuAddr_2006
-  jsr @store_vm_add_h_to_range
-
   STA $1B
   LDA $0300,X
-  STA VMADDL ; PpuAddr_2006
   STA $1A
+
+;   STA VMADDH ; PpuAddr_2006
+  jmp @tile_write
+  nops 3
+;   jsr @store_vm_add_h_to_range
+;   STA VMADDL ; PpuAddr_2006
+@continue_tile_write:
   INX
   INX
   LDA $0300,X
@@ -1733,7 +1757,7 @@ nops 1
 .byte $2F, $20, $2F, $20, $20, $20, $20, $43, $48, $49, $41, $4F, $2F, $20, $2F, $20
 
 
-repeat $FF, (112-42)
+repeat $FF, (70-56)
 @bank_switch_to_a:
   PHA
   AND #$0F
@@ -1766,6 +1790,39 @@ repeat $FF, (112-42)
 @store_vm_add_h_to_range:
   jslb store_vmaddh_to_proper_range, $a0
   RTS
+
+; branches if we're writing attributes
+; A should have the current VMADDL
+@tile_write:
+  sta VMADDL
+  PHA       ; push vmaddl
+  LDA $1B ; current VMH
+  jslb convert_a_to_vmaddh_range, $a0
+  STA $1B
+  STA VMADDH  
+  AND #$23
+  CMP #$23
+  BEQ :+
+  PLA
+  jmp @continue_tile_write
+: PLA ; current VML
+  AND #$C0
+  CMP #$C0
+  BEQ :+
+  jmp @continue_tile_write
+  ; attributes
+: jslb handle_tile_attribute_write, $a0
+  jmp @nes_f1cc
+
+
+@set_stack_to_01:
+    lda $01
+    setAXY16
+    ora #$0100
+    tax
+    txs
+    setAXY8
+    jmp @return_from_stack_set
 
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF

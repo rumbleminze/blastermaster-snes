@@ -169,7 +169,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  LDA #$00
+  ; LDA #$00
   STA SETINI
 
 
@@ -246,7 +246,7 @@ intro_done:
     
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
-    ; jslb setup_hdma, $a0
+    jslb setup_hdma, $a0
 
     LDA #$7E
     STA A1B3
@@ -463,7 +463,7 @@ dma_values:
   .include "hdma_scroll_lookups.asm"
   .include "2a03_conversion.asm"
   .include "windows.asm"
-
+  .include "blastermaster_rewrites.asm"
 .segment "PRGA0C"
 
 fixeda0:

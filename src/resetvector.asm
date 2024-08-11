@@ -18,6 +18,8 @@ nmi:
     PHA
     PHX
     PHY
+    
+    ; jslb setup_hdma, $a0
     jslb snes_nmi, $a0
     
     ; jump to NES NMI
@@ -25,19 +27,19 @@ nmi:
     LDA ACTIVE_NES_BANK
     INC
     ADC #$A0
-    STA BANK_SWITCH_DB    
+    STA RESET_VECTOR_BS_DB    
     PHA
     PLB
 
     ; This assume the NES NMI is at $EB7E
     LDA #$EB
-    STA BANK_SWITCH_HB
+    STA RESET_VECTOR_BS_HB
     LDA #$7E
-    STA BANK_SWITCH_LB
-    JML [BANK_SWITCH_LB]
+    STA RESET_VECTOR_BS_LB
+    JML [RESET_VECTOR_BS_LB]
 
 return_from_nes_nmi:
-    jslb setup_hdma, $a0
+    ; jslb setup_hdma, $a0
     ; handle sprite traslation last, since if that bleeds out of vblank it's ok
     jslb translate_blaster_master_sprites, $a0
     PLY

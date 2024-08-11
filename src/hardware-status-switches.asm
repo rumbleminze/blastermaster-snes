@@ -43,16 +43,14 @@ write_stack_adjustment_routine_to_ram:
   BNE :-
   RTS
 
-; this is very Chip n' Dale Specific, but one option for dealing
-; with the nes code using TXS
-set_stack_pointer_to_82_x:
+set_stack_pointer_to_01:
   PLA
   STA STACK_RETURN_LB
   PLA
   STA STACK_RETURN_HB
   PLA
   STA STACK_RETURN_DB
-  LDA $82,X
+  LDA $01
 
   setAXY16
   ORA #$0100
@@ -527,7 +525,7 @@ handle_mmc1_control_register:
 vmaddh_range:
 .byte $20, $21, $22, $23, $20, $21, $22, $23, $24, $25, $26, $27, $24, $25, $26, $27
 
-store_vmaddh_to_proper_range:
+convert_a_to_vmaddh_range:
   PHA
   LDA BANK_SWITCH_CTRL_REGS
   AND #$01
@@ -545,7 +543,6 @@ store_vmaddh_to_proper_range:
   AND #$23
 
 store:
-  STA VMADDH
   RTL
 
 store_vmaddh_for_vertical_mirroring:
@@ -556,3 +553,8 @@ store_vmaddh_for_vertical_mirroring:
   ; 2C-2F = 24-27
   AND #$27
   BRA store
+
+store_vmaddh_to_proper_range:
+    jslb convert_a_to_vmaddh_range, $a0
+    STA VMADDH
+    RTL
