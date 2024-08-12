@@ -169,7 +169,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  ; LDA #$00
+  LDA #$00
   STA SETINI
 
 
@@ -464,6 +464,7 @@ dma_values:
   .include "2a03_conversion.asm"
   .include "windows.asm"
   .include "blastermaster_rewrites.asm"
+  .include "input.asm"
 .segment "PRGA0C"
 
 fixeda0:

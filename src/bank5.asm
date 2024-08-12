@@ -2,9 +2,23 @@
 
 
 ; 8000 - bank 5
-.byte $A9, $00, $85, $E0, $A2, $B4, $CA, $9D, $00, $07, $D0, $FA, $8D, $15, $40, $20
-.byte $17, $BE, $60, $85, $E9, $0A, $AA, $BD, $B0, $84, $85, $E1, $BD, $B1, $84, $85
-.byte $E2, $A9, $0F, $8D, $15, $40, $A0, $00, $F0, $43, $AA, $C8, $B1, $E1, $9D, $00
+  LDA #$00
+  STA $E0
+  LDX #$B4
+: DEX
+  STA $0700,X
+  BNE :-
+  STA SNDCHANSW4015 ;  ApuStatus_4015, maybe should be NES_APU_CHAN_ENABLE
+  JSR $BE17
+  RTS
+
+.byte $85, $E9, $0A, $AA, $BD, $B0, $84, $85, $E1, $BD, $B1, $84, $85
+.byte $E2, $A9, $0F
+
+  STA SNDCHANSW4015 ; ApuStatus_4015
+
+
+.byte $A0, $00, $F0, $43, $AA, $C8, $B1, $E1, $9D, $00
 .byte $07, $C8, $B1, $E1, $9D, $09, $07, $C8, $B1, $E1, $9D, $12, $07, $C8, $B1, $E1
 .byte $9D, $1B, $07, $C8, $B1, $E1, $9D, $24, $07, $C8, $A9, $01, $9D, $2D, $07, $A9
 .byte $00, $9D, $36, $07, $9D, $3F, $07, $9D, $48, $07, $9D, $87, $07, $8A, $8D, $FF
@@ -45,11 +59,43 @@
 .byte $E1, $9D, $2D, $07, $C8, $18, $98, $65, $E1, $9D, $1B, $07, $A5, $E2, $69, $00
 .byte $9D, $24, $07, $A5, $E4, $10, $61, $A5, $E3, $30, $3F, $0A, $A8, $B9, $EE, $83
 .byte $85, $E1, $9D, $90, $07, $B9, $EF, $83, $09, $08, $85, $E2, $BD, $00, $07, $0A
-.byte $0A, $A8, $B0, $0C, $BD, $09, $07, $99, $00, $40, $BD, $12, $07, $99, $01, $40
-.byte $BD, $00, $07, $30, $05, $A5, $E2, $99, $03, $40, $BD, $5A, $07, $18, $65, $E1
-.byte $99, $02, $40, $BD, $00, $07, $09, $40, $D0, $23, $BD, $00, $07, $0A, $0A, $A8
-.byte $A9, $10, $C0, $08, $D0, $07, $A9, $00, $99, $00, $40, $F0, $0B, $99, $00, $40
-.byte $A9, $00, $99, $01, $40, $99, $02, $40, $BD, $00, $07, $29, $BF, $9D, $00, $07
+.byte $0A, $A8, $B0, $0C
+
+  LDA $0709,X
+  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  LDA $0712,X
+  STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
+  LDA $0700,X
+  BMI :+
+  LDA $E2
+  STA SNDSQR1LENPH4003, Y ; Sq0Length_4003,Y
+: LDA $075A,X
+  CLC
+  ADC $E1
+  STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y
+  LDA $0700,X
+  ORA #$40
+  BNE b5_a29d
+  LDA $0700,X
+  ASL A
+  ASL A
+  TAY
+  LDA #$10
+  CPY #$08
+  BNE :+
+  LDA #$00
+  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  BEQ :++
+: STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  LDA #$00
+  STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
+  STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y 
+: LDA $0700,X
+  AND #$BF
+b5_a29d:
+  STA $0700,X
+
+; 82A0
 .byte $BD, $00, $07, $30, $28, $BD, $87, $07, $29, $40, $D0, $21, $BD, $87, $07, $10
 .byte $1C, $29, $DF, $9D, $87, $07, $29, $0F, $9D, $63, $07, $BD, $87, $07, $29, $10
 .byte $F0, $08, $BD, $09, $07, $9D, $6C, $07, $85, $E7, $4C, $83, $83, $60, $BD, $48
@@ -64,11 +110,21 @@
 .byte $38, $ED, $FF, $07, $9D, $99, $07, $4C, $2D, $83, $DE, $99, $07, $BD, $48, $07
 .byte $29, $0F, $49, $FF, $18, $69, $01, $DD, $99, $07, $F0, $C7, $BD, $AB, $07, $9D
 .byte $A2, $07, $DE, $A2, $07, $BD, $00, $07, $29, $03, $0A, $0A, $A8, $BD, $5A, $07
-.byte $18, $7D, $90, $07, $18, $7D, $99, $07, $99, $02, $40, $60, $BD, $87, $07, $10
+.byte $18, $7D, $90, $07, $18, $7D, $99, $07
+
+  STA SNDTMP4002, Y ; Sq0Timer_4002,Y
+  RTS
+
+.byte $BD, $87, $07, $10
 .byte $FA, $29, $20, $D0, $F6, $BD, $87, $07, $29, $10, $D0, $40, $BD, $51, $07, $85
 .byte $E7, $BD, $6C, $07, $85, $E8, $BD, $63, $07, $A8, $B1, $E7, $F0, $17, $85, $E7
 .byte $FE, $63, $07, $A5, $E4, $10, $0D, $BD, $00, $07, $29, $03, $0A, $0A, $A8, $A5
-.byte $E7, $99, $00, $40, $60, $C8, $B1, $E7, $30, $09, $BD, $87, $07, $09, $20, $9D
+.byte $E7
+; 8391
+  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  RTS
+
+.byte $C8, $B1, $E7, $30, $09, $BD, $87, $07, $09, $20, $9D
 .byte $87, $07, $60, $C8, $B1, $E7, $9D, $63, $07, $4C, $76, $83, $BD, $63, $07, $F0
 .byte $04, $DE, $63, $07, $60, $BD, $87, $07, $29, $0F, $9D, $63, $07, $BD, $6C, $07
 .byte $29, $20, $D0, $14, $BD, $6C, $07, $29, $0F, $F0, $CF, $DE, $6C, $07, $BD, $6C
@@ -1181,11 +1237,21 @@
 
 ; BE00 - bank 5
 .byte $AD, $BD, $BD, $8D, $F1, $07, $A9, $01, $8D, $F2, $07, $A9, $00, $8D, $F3, $07
-.byte $8D, $F4, $07, $8D, $F5, $07, $60, $A9, $00, $8D, $F1, $07, $A9, $0F, $8D, $15
-.byte $40, $D0, $E3, $AD, $F1, $07, $85, $BE, $F0, $EC, $CE, $F2, $07, $D0, $E7, $AD
+.byte $8D, $F4, $07, $8D, $F5, $07, $60
+
+  LDA #$00
+  STA $07F1
+  LDA #$0F
+  STA SNDCHANSW4015 ; ApuStatus_4015
+
+.byte $D0, $E3, $AD, $F1, $07, $85, $BE, $F0, $EC, $CE, $F2, $07, $D0, $E7, $AD
 .byte $F0, $07, $85, $BD, $A0, $00, $B1, $BD, $C8, $C9, $A0, $90, $1B, $C9, $B0, $90
 .byte $0F, $C9, $C0, $90, $6A, $A9, $0F, $8D, $15, $40, $A9, $00, $8D, $F1, $07, $60
-.byte $AD, $F5, $07, $09, $01, $8D, $F5, $07, $85, $BF, $A9, $0F, $8D, $15, $40, $B1
+.byte $AD, $F5, $07, $09, $01, $8D, $F5, $07, $85, $BF, $A9, $0F
+
+  STA SNDCHANSW4015 ; ApuStatus_4015
+ 
+.byte $B1
 .byte $BD, $8D, $F2, $07, $C8, $18, $98, $65, $BD, $8D, $F0, $07, $A5, $BE, $69, $00
 .byte $8D, $F1, $07, $AD, $F5, $07, $29, $01, $D0, $2C, $A5, $BF, $0A, $AA, $BD, $BE
 .byte $BD, $85, $BD, $BD, $BF, $BD, $85, $BE, $A0, $00, $B1, $BD, $8D, $10, $40, $C8
@@ -1209,12 +1275,37 @@
 .byte $11, $29, $03, $D0, $14, $A9, $00, $85, $44, $A5, $11, $29, $08, $D0, $05, $A9
 .byte $46, $4C, $86, $BF, $A9, $47, $4C, $63, $C0, $60, $01, $02, $04, $08, $10, $20
 .byte $40, $80, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $4C, $00, $00, $4C, $00, $80, $4C, $13, $80, $4C, $00, $00, $4C, $00
-.byte $00, $4C, $77, $80, $EE, $F4, $FF, $FF, $FF, $FF, $00, $00, $F4, $FF, $FF, $FF
+
+; ; free space
+; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+repeat $ff, 46
+sound_hijack_3:
+  JSR $8000
+  bra :+
+
+sound_hijack:
+  JSR $8013
+: jslb convert_audio, $a0
+  RTS
+
+sound_hijack_2:
+  JSR $8077
+  bra :-
+
+.byte $FF, $FF, $4C, $00, $00 
+
+; BFE5
+  JMP sound_hijack_3 ; $8000
+  JMP sound_hijack ; $8013
+  JMP $0000
+  JMP $0000
+  JMP sound_hijack_2 ; JMP $8077
+    
+.byte $EE, $F4, $FF, $FF, $FF, $FF, $00, $00, $F4, $FF, $FF, $FF
+
 .segment "PRGA6C"
 fixeda6:
 .include "bank7.asm"

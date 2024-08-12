@@ -1,18 +1,3 @@
-reset_to_stored_screen_offsets:
-  LDA STORED_OFFSETS_SET
-  BEQ :+
-  LDA UNPAUSE_BG1_HOFS_LB
-  STA HOFS_LB
-  LDA UNPAUSE_BG1_HOFS_HB
-  STA HOFS_HB
-  LDA UNPAUSE_BG1_VOFS_LB
-  STA VOFS_LB
-  LDA UNPAUSE_BG1_VOFS_HB
-  ; STA VOFS_HB
-
-  STZ STORED_OFFSETS_SET
-: RTL
-
 no_scroll_screen_enable:
   LDA HOFS_LB
   STA UNPAUSE_BG1_HOFS_LB
@@ -35,7 +20,10 @@ no_scroll_screen_enable:
   RTL 
 infidelitys_scroll_handling:
 
-  LDA PPU_CONTROL_STATE
+  LDA $F1
+  AND #$01
+  ORA PPU_CONTROL_STATE
+
   PHA 
   AND #$80
   BNE :+
@@ -75,6 +63,7 @@ infidelitys_scroll_handling:
 : LDA #$01
   STA HOFS_HB
   ; STA VOFS_HB
+
 : RTL 
 
 
@@ -105,16 +94,18 @@ setup_hdma:
   STA SCROLL_HDMA_START + 6
   STA SCROLL_HDMA_START + 11
   
-  lda PPU_CONTROL_STATE
+  lda $F1
+  AND #$01
   STA SCROLL_HDMA_START + 2
   STA SCROLL_HDMA_START + 7
   STA SCROLL_HDMA_START + 12
 
-  LDX PPU_CONTROL_STATE  
-  LDA $A0A610,X
-  STA SCROLL_HDMA_START + 4
-  STA SCROLL_HDMA_START + 9
-  STA SCROLL_HDMA_START + 14
+  ; v-hi byte, always 0 for BM
+  ; LDX VOFS_HB  
+  ; LDA $A0A610,X
+  STZ SCROLL_HDMA_START + 4
+  STZ SCROLL_HDMA_START + 9
+  STZ SCROLL_HDMA_START + 14
 
   STZ SCROLL_HDMA_START + 15
 

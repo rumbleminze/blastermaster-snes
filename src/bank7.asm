@@ -87,7 +87,10 @@ NOP ; TXS
 
 
 ; C300 - bank 7
-.byte $14, $A9, $02, $85, $DD, $20, $14, $CA, $A9, $00, $85, $13, $85, $10, $85, $11
+.byte $14
+  LDA #$02
+  STA $DD
+.byte $20, $14, $CA, $A9, $00, $85, $13, $85, $10, $85, $11
 .byte $8D, $F0, $06, $8D, $F1, $06, $8D, $F2, $06, $85, $92, $A9, $FF, $85, $C1, $A9
 .byte $03, $85, $46, $20, $B2, $C5, $AD, $F3, $06, $0A, $D0, $08, $A9, $00, $20, $92
 .byte $E6, $20, $D1, $F7, $A9, $00, $85, $C5, $85, $15, $85, $B7, $85, $C3, $85, $90
@@ -128,7 +131,18 @@ NOP ; TXS
 .byte $27, $C5, $20, $E3, $D7, $20, $A9, $CB, $A5, $14, $C9, $08, $90, $14, $A5, $D7
 .byte $C9, $08, $90, $0E, $A9, $01, $20, $CC, $DE, $20, $A7, $F6, $20, $BA, $CD, $4C
 .byte $27, $C5, $A9, $38, $20, $CC, $DE, $4C, $5E, $C3, $20, $C2, $DE, $AD, $F3, $06
-.byte $D0, $28, $A9, $3D, $20, $CC, $DE, $C6, $DD, $10, $16, $CE, $7E, $03, $F0, $1A
+.byte $D0, $28, $A9, $3D, $20, $CC, $DE
+
+; drecement lives when dead
+.if DEBUG_MOD = 0
+ $C6, $DD
+.endif
+.if DEBUG_MOD > 0
+  NOP
+  NOP
+.endif
+
+.byte $10, $16, $CE, $7E, $03, $F0, $1A
 .byte $20, $1C, $F7, $D0, $15, $20, $BA, $CD, $A5, $14, $09, $08, $85, $14, $4C, $FB
 .byte $C2, $20, $FA, $C5, $20, $BA, $CD, $4C, $26, $C3, $4C, $9E, $C2, $A9, $00, $20
 .byte $1B, $E6, $20, $33, $F8, $A9, $18, $20, $CC, $DE, $4C, $5E, $C3, $20, $C2, $DE
@@ -987,9 +1001,30 @@ nops 16
 
 ; E900 - bank 7
 .byte $F6, $A9, $14, $85, $78, $D0, $04, $A9, $00, $85, $78, $A5, $F5, $F0, $04, $A5
-.byte $F7, $85, $F5, $60, $A6, $FB, $E8, $8E, $16, $40, $CA, $8E, $16, $40, $A2, $08
-.byte $AD, $16, $40, $29, $03, $C9, $01, $26, $F7, $AD, $17, $40, $29, $03, $C9, $01
-.byte $26, $F8, $CA, $D0, $EB, $60, $A9, $80, $85, $12, $24, $12, $30, $FC, $60
+.byte $F7, $85, $F5, $60
+
+; E914 - input
+  jslb augment_input, $a0
+  nops 29
+;   LDX $FB
+;   INX
+;   STX JOYSER0 ; Ctrl1_4016
+;   DEX
+;   STX JOYSER0 ; Ctrl1_4016
+;   LDX #$08
+;   LDA JOYSER0 ; Ctrl1_4016
+;   AND #$03
+;   CMP #$01
+;   ROL $F7
+;   LDA JOYSER1 ; Ctrl2_FrameCtr_4017
+;   AND #$03
+;   CMP #$01
+;   ROL $F8
+;   DEX
+;   BNE $E920
+  RTS
+
+.byte $A9, $80, $85, $12, $24, $12, $30, $FC, $60
 
 ; E93f - Enable NMI
   jslb enable_nmi_and_store, $a0

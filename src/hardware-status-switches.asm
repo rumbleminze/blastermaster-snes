@@ -220,17 +220,21 @@ update_ppu_control_from_a:
     bra ret_from_update_ppu_control_from_a
  
  hvoffset10:  
-    INC VOFS_HB
+    ; INC VOFS_HB
     bra ret_from_update_ppu_control_from_a
  
  hvoffset11:  
     INC HOFS_HB
-    INC VOFS_HB
+    ; INC VOFS_HB
     
 
 ret_from_update_ppu_control_from_a:
     ; LDA INIDISP_STATE
     ; STA INIDISP
+    LDA $F1
+    AND #$01
+    STA HOFS_HB
+    
     pla
     RTL
 
