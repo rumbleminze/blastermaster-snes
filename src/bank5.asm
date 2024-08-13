@@ -8,14 +8,14 @@
 : DEX
   STA $0700,X
   BNE :-
-  STA SNDCHANSW4015 ;  ApuStatus_4015, maybe should be NES_APU_CHAN_ENABLE
+  jsr WriteAPUControl ; STA SNDCHANSW4015 ;  ApuStatus_4015, maybe should be NES_APU_CHAN_ENABLE
   JSR $BE17
   RTS
 
 .byte $85, $E9, $0A, $AA, $BD, $B0, $84, $85, $E1, $BD, $B1, $84, $85
 .byte $E2, $A9, $0F
 
-  STA SNDCHANSW4015 ; ApuStatus_4015
+  jsr WriteAPUControl ; STA SNDCHANSW4015 ; ApuStatus_4015
 
 
 .byte $A0, $00, $F0, $43, $AA, $C8, $B1, $E1, $9D, $00
@@ -62,17 +62,17 @@
 .byte $0A, $A8, $B0, $0C
 
   LDA $0709,X
-  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  jsr WriteAPUSq0Ctrl0_I_Y ; STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
   LDA $0712,X
-  STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
+  jsr WriteAPUSq0Ctrl1_I_Y ; STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
   LDA $0700,X
   BMI :+
   LDA $E2
-  STA SNDSQR1LENPH4003, Y ; Sq0Length_4003,Y
+  jsr WriteAPUSq0Ctrl3_I_Y ; STA SNDSQR1LENPH4003, Y ; Sq0Length_4003,Y
 : LDA $075A,X
   CLC
   ADC $E1
-  STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y
+  jsr WriteAPUSq0Ctrl2_I_Y ; STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y
   LDA $0700,X
   ORA #$40
   BNE b5_a29d
@@ -84,12 +84,12 @@
   CPY #$08
   BNE :+
   LDA #$00
-  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  jsr WriteAPUSq0Ctrl0_I_Y ; STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
   BEQ :++
-: STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+: jsr WriteAPUSq0Ctrl0_I_Y ; STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
   LDA #$00
-  STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
-  STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y 
+  jsr WriteAPUSq0Ctrl1_I_Y ; STA SNDSQR1E4001, Y ; Sq0Sweep_4001,Y
+  jsr WriteAPUSq0Ctrl2_I_Y ; STA SNDSQR1PERIOD4002, Y ; Sq0Timer_4002,Y 
 : LDA $0700,X
   AND #$BF
 b5_a29d:
@@ -112,7 +112,7 @@ b5_a29d:
 .byte $A2, $07, $DE, $A2, $07, $BD, $00, $07, $29, $03, $0A, $0A, $A8, $BD, $5A, $07
 .byte $18, $7D, $90, $07, $18, $7D, $99, $07
 
-  STA SNDTMP4002, Y ; Sq0Timer_4002,Y
+  jsr WriteAPUSq0Ctrl2_I_Y ; STA SNDTMP4002, Y ; Sq0Timer_4002,Y
   RTS
 
 .byte $BD, $87, $07, $10
@@ -121,7 +121,7 @@ b5_a29d:
 .byte $FE, $63, $07, $A5, $E4, $10, $0D, $BD, $00, $07, $29, $03, $0A, $0A, $A8, $A5
 .byte $E7
 ; 8391
-  STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
+  jsr WriteAPUSq0Ctrl0_I_Y ; STA SNDSQR1CTRL4000, Y ; Sq0Duty_4000,Y
   RTS
 
 .byte $C8, $B1, $E7, $30, $09, $BD, $87, $07, $09, $20, $9D
@@ -1242,14 +1242,14 @@ b5_a29d:
   LDA #$00
   STA $07F1
   LDA #$0F
-  STA SNDCHANSW4015 ; ApuStatus_4015
+  jsr WriteAPUControl ; STA SNDCHANSW4015 ; ApuStatus_4015
 
 .byte $D0, $E3, $AD, $F1, $07, $85, $BE, $F0, $EC, $CE, $F2, $07, $D0, $E7, $AD
 .byte $F0, $07, $85, $BD, $A0, $00, $B1, $BD, $C8, $C9, $A0, $90, $1B, $C9, $B0, $90
 .byte $0F, $C9, $C0, $90, $6A, $A9, $0F, $8D, $15, $40, $A9, $00, $8D, $F1, $07, $60
 .byte $AD, $F5, $07, $09, $01, $8D, $F5, $07, $85, $BF, $A9, $0F
 
-  STA SNDCHANSW4015 ; ApuStatus_4015
+ jsr WriteAPUControl ; STA SNDCHANSW4015 ; ApuStatus_4015
  
 .byte $B1
 .byte $BD, $8D, $F2, $07, $C8, $18, $98, $65, $BD, $8D, $F0, $07, $A5, $BE, $69, $00

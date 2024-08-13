@@ -125,89 +125,6 @@ dd_update_row_attributes:
   RTL
 
 
-dd_update_column_attributes:
-
-  ; original code from C982
-  CPX #$1E
-  BMI :+
-  LDX #$00
-  INC $1F
-: STX $1E
-  DEC $08
-  BEQ :+
-  RTL
-
-: PHA
-  PHX
-  PHY
-
-  LDA $1C
-  LSR
-  LSR
-  TAY
-  AND #$07
-  ORA #$C0
-  STA COL_ATTR_VM_LB
-  STA COL2_ATTR_VM_LB
-
-  LDA $02
-  CMP #$67
-
-  LDA #$23
-  STA COL_ATTR_VM_HB
-
-  LDA $0628, Y
-  STA COL_ATTR_VM_START
-  LDA $0630, Y
-  STA COL_ATTR_VM_START + 1
-  LDA $0638, Y
-  STA COL_ATTR_VM_START + 2
-  LDA $0640, Y
-  STA COL_ATTR_VM_START + 3
-  LDA $0648, Y
-  STA COL_ATTR_VM_START + 4
-  LDA $0650, Y
-  STA COL_ATTR_VM_START + 5
-  LDA $0658, Y
-  STA COL_ATTR_VM_START + 6
-  LDA $0660, Y
-  STA COL_ATTR_VM_START + 7
-
-  LDA #$27
-  STA COL2_ATTR_VM_HB
-  LDA $0668, Y
-  STA COL2_ATTR_VM_START
-  LDA $0670, Y
-  STA COL2_ATTR_VM_START + 1
-  LDA $0678, Y
-  STA COL2_ATTR_VM_START + 2
-  LDA $0680, Y
-  STA COL2_ATTR_VM_START + 3
-  LDA $0688, Y
-  STA COL2_ATTR_VM_START + 4
-  LDA $0690, Y
-  STA COL2_ATTR_VM_START + 5
-  LDA $0698, Y
-  STA COL2_ATTR_VM_START + 6
-  LDA $06A0, Y
-  STA COL2_ATTR_VM_START + 7
-
-
-  LDA #$01
-  STA COL_ATTR_HAS_VALUES
-  STA COL2_ATTR_HAS_VALUES
-
-  jslb check_and_copy_column_attributes_to_buffer, $a0
-
-  PLY
-  PLX
-  PLA
-  INC $08
-  DEC $08
-  RTL
-
-
-
 full_attribute_copy_from_0628:
   PHX
   PHY
@@ -469,10 +386,10 @@ check_and_copy_attribute_buffer:
   BEQ :+
   JSR dma_column_attributes
 : 
-  LDA COLUMN_2_DMA
-  BEQ :+
-  JSR dma_column2_attributes
- : 
+;   LDA COLUMN_2_DMA
+;   BEQ :+
+;   JSR dma_column2_attributes
+;  : 
   RTS
 
 check_and_copy_dma_buffers_long:
@@ -1031,9 +948,9 @@ check_and_copy_column_attributes_to_buffer:
   LDA COL_ATTR_HAS_VALUES
   BEQ :+
   JSR convert_column_of_tiles
-: LDA COL2_ATTR_HAS_VALUES
-  BEQ :+
-  JSR convert_column2_of_tiles
+; : LDA COL2_ATTR_HAS_VALUES
+;   BEQ :+
+;   JSR convert_column2_of_tiles
 : RTL
 
 convert_column_of_tiles:
@@ -1224,155 +1141,156 @@ dma_column_attributes:
   RTS
 
 ; I'm very lazily copy/pasting this to support multiple column conversion.
-convert_column2_of_tiles:
-  LDA COL2_ATTR_VM_HB
-  ; early rtl
-  BNE :+
-  RTS
-: LDA COL2_ATTR_VM_LB
-  AND #$F0
-  CMP #$C0
-  BEQ :+
-  CMP #$D0
-  BEQ :+
-  CMP #$E0
-  BEQ :+
-  CMP #$F0
-  BEQ :+
-  RTS
-: 
-  LDA COL2_ATTR_VM_LB
-  AND #$0F
-  ASL A
-  ASL a
+; convert_column2_of_tiles:
+;   BRK
+;   LDA COL2_ATTR_VM_HB
+;   ; early rtl
+;   BNE :+
+;   RTS
+; : LDA COL2_ATTR_VM_LB
+;   AND #$F0
+;   CMP #$C0
+;   BEQ :+
+;   CMP #$D0
+;   BEQ :+
+;   CMP #$E0
+;   BEQ :+
+;   CMP #$F0
+;   BEQ :+
+;   RTS
+; : 
+;   LDA COL2_ATTR_VM_LB
+;   AND #$0F
+;   ASL A
+;   ASL a
 
-  STA C2_ATTR_DMA_VMADDL
-  LDA COL2_ATTR_VM_HB
-  AND #$24
-  STA C2_ATTR_DMA_VMADDH
+;   STA C2_ATTR_DMA_VMADDL
+;   LDA COL2_ATTR_VM_HB
+;   AND #$24
+;   STA C2_ATTR_DMA_VMADDH
 
-  LDA #$20
-  STA C2_ATTR_DMA_SIZE_LB
-  STZ C2_ATTR_DMA_SIZE_HB
+;   LDA #$20
+;   STA C2_ATTR_DMA_SIZE_LB
+;   STZ C2_ATTR_DMA_SIZE_HB
 
-  LDY #$00
-  LDX #$00
-: LDA COL2_ATTR_VM_START, Y
-  AND #$03
-  ASL
-  ASL
-  STA C2_ATTRIBUTE_CACHE, X
-  STA C2_ATTRIBUTE_CACHE + 1, X
-  ; store in UR and LR row
-  STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_0, X
-  STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_1, X
+;   LDY #$00
+;   LDX #$00
+; : LDA COL2_ATTR_VM_START, Y
+;   AND #$03
+;   ASL
+;   ASL
+;   STA C2_ATTRIBUTE_CACHE, X
+;   STA C2_ATTRIBUTE_CACHE + 1, X
+;   ; store in UR and LR row
+;   STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_0, X
+;   STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_1, X
 
-  ; get B (TR), write them as dma lines 3 and 4.
-  LDA COL2_ATTR_VM_START, Y
-  CLC
-  AND #$0C
-  STA C2_ATTRIBUTE_CACHE + $40, X
-  STA C2_ATTRIBUTE_CACHE + $40 + 1, X
-  STA C2_ATTRIBUTE_CACHE + $60, X
-  STA C2_ATTRIBUTE_CACHE + $60 + 1, X
+;   ; get B (TR), write them as dma lines 3 and 4.
+;   LDA COL2_ATTR_VM_START, Y
+;   CLC
+;   AND #$0C
+;   STA C2_ATTRIBUTE_CACHE + $40, X
+;   STA C2_ATTRIBUTE_CACHE + $40 + 1, X
+;   STA C2_ATTRIBUTE_CACHE + $60, X
+;   STA C2_ATTRIBUTE_CACHE + $60 + 1, X
 
-  ; get C (BL)
-  LDA COL2_ATTR_VM_START, Y
-  CLC
-  AND #$30
-  LSR A
-  LSR A
-  STA C2_ATTRIBUTE_CACHE + 2, X
-  STA C2_ATTRIBUTE_CACHE + 3, X
-  STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_2, X
-  STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_3, X
+;   ; get C (BL)
+;   LDA COL2_ATTR_VM_START, Y
+;   CLC
+;   AND #$30
+;   LSR A
+;   LSR A
+;   STA C2_ATTRIBUTE_CACHE + 2, X
+;   STA C2_ATTRIBUTE_CACHE + 3, X
+;   STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_2, X
+;   STA C2_ATTRIBUTE_CACHE + ATTR_WORK_BYTE_3, X
 
-  ; get D (BR)
-  LDA COL2_ATTR_VM_START, Y
-  AND #$C0
-  LSR A
-  LSR A
-  LSR A
-  LSR A
-  STA C2_ATTRIBUTE_CACHE + $40 + 2, X
-  STA C2_ATTRIBUTE_CACHE + $40 + 3, X
-  STA C2_ATTRIBUTE_CACHE + $60 + 2, X
-  STA C2_ATTRIBUTE_CACHE + $60 + 3, X
+;   ; get D (BR)
+;   LDA COL2_ATTR_VM_START, Y
+;   AND #$C0
+;   LSR A
+;   LSR A
+;   LSR A
+;   LSR A
+;   STA C2_ATTRIBUTE_CACHE + $40 + 2, X
+;   STA C2_ATTRIBUTE_CACHE + $40 + 3, X
+;   STA C2_ATTRIBUTE_CACHE + $60 + 2, X
+;   STA C2_ATTRIBUTE_CACHE + $60 + 3, X
 
-  INX
-  INX
-  INX
-  INX
+;   INX
+;   INX
+;   INX
+;   INX
 
-  INY
-  CPY #$08
-  BNE :-
+;   INY
+;   CPY #$08
+;   BNE :-
 
-  INC COLUMN_2_DMA
-  STZ COL2_ATTR_HAS_VALUES
-  RTS
+;   INC COLUMN_2_DMA
+;   STZ COL2_ATTR_HAS_VALUES
+;   RTS
 
-dma_column2_attributes:
-  STZ COLUMN_2_DMA
+; dma_column2_attributes:
+;   STZ COLUMN_2_DMA
 
-  ; write vertically for columns
-  LDA #$81
-  STA VMAIN
+;   ; write vertically for columns
+;   LDA #$81
+;   STA VMAIN
 
-  LDX #$04
+;   LDX #$04
 
-  LDA #.hibyte(C2_ATTRIBUTE_CACHE)
-  STA C2_ATTR_DMA_SRC_HB
-  LDA #.lobyte(C2_ATTRIBUTE_CACHE)
-  STA C2_ATTR_DMA_SRC_LB
+;   LDA #.hibyte(C2_ATTRIBUTE_CACHE)
+;   STA C2_ATTR_DMA_SRC_HB
+;   LDA #.lobyte(C2_ATTRIBUTE_CACHE)
+;   STA C2_ATTR_DMA_SRC_LB
 
-: STZ DMAP6
+; : STZ DMAP6
 
-  LDA #$19
-  STA BBAD6
+;   LDA #$19
+;   STA BBAD6
 
-  LDA #$7E
-  STA A1B6
+;   LDA #$7E
+;   STA A1B6
 
-  LDA C2_ATTR_DMA_SRC_HB
-  STA A1T6H
-  LDA C2_ATTR_DMA_SRC_LB
-  STA A1T6L
+;   LDA C2_ATTR_DMA_SRC_HB
+;   STA A1T6H
+;   LDA C2_ATTR_DMA_SRC_LB
+;   STA A1T6L
 
-  LDA C2_ATTR_DMA_SIZE_LB
-  STA DAS6L
-  LDA C2_ATTR_DMA_SIZE_HB
-  STA DAS6H
+;   LDA C2_ATTR_DMA_SIZE_LB
+;   STA DAS6L
+;   LDA C2_ATTR_DMA_SIZE_HB
+;   STA DAS6H
 
-  LDA C2_ATTR_DMA_VMADDH
-  STA VMADDH
-  LDA C2_ATTR_DMA_VMADDL
-  STA VMADDL
+;   LDA C2_ATTR_DMA_VMADDH
+;   STA VMADDH
+;   LDA C2_ATTR_DMA_VMADDL
+;   STA VMADDL
 
-  LDA DMA_ENABLED_STATE
-  ORA #$40
-  STA MDMAEN
+;   LDA DMA_ENABLED_STATE
+;   ORA #$40
+;   STA MDMAEN
 
-  INC C2_ATTR_DMA_VMADDL
-  LDA C2_ATTR_DMA_SRC_LB
-  CLC
-  ADC #$20
-  STA C2_ATTR_DMA_SRC_LB
-  DEX
-  BNE :-
+;   INC C2_ATTR_DMA_VMADDL
+;   LDA C2_ATTR_DMA_SRC_LB
+;   CLC
+;   ADC #$20
+;   STA C2_ATTR_DMA_SRC_LB
+;   DEX
+;   BNE :-
 
-  LDY #$0F
-  LDA #$00
-: STA COLUMN_2_DMA,Y
-  DEY
-  BPL :-
-  LDA #$FF
-  STA COLUMN_2_DMA + 1
+;   LDY #$0F
+;   LDA #$00
+; : STA COLUMN_2_DMA,Y
+;   DEY
+;   BPL :-
+;   LDA #$FF
+;   STA COLUMN_2_DMA + 1
 
-  LDA #$80
-  STA VMAIN
+;   LDA #$80
+;   STA VMAIN
 
-  RTS
+;   RTS
 
 
 ; X should contain VMADDH

@@ -1,7 +1,4 @@
 .segment "PRGA7"; Bank 6
-
-; Bank 6 - Mostly Audio Stuff
-
 ; 8000 - bank 6
 .byte $02, $80, $24, $81, $24, $81, $DB, $92, $64, $8C, $09, $90, $6E, $91, $97, $8E
 .byte $B0, $8C, $F8, $8A, $36, $8B, $74, $8B, $B2, $8B, $E5, $89, $0F, $8A, $1D, $8A

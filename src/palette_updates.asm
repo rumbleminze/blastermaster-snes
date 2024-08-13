@@ -142,7 +142,7 @@ make_first_palette_greyscale:
 : LDA greyscale_palette, y
   STA CGDATA
   INY
-  CMP #$08
+  CPY #$08
   BNE :-
   rts
 
@@ -158,6 +158,6 @@ write_default_palettes:
 : LDA snes_sprite_palatte, y
   STA CGDATA
   INY
-  CMP #$20
+  CPY #$20
   BNE :-
   rts

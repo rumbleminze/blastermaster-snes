@@ -1,23 +1,4 @@
-no_scroll_screen_enable:
-  LDA HOFS_LB
-  STA UNPAUSE_BG1_HOFS_LB
-  LDA HOFS_HB
-  STA UNPAUSE_BG1_HOFS_HB
-  LDA VOFS_LB
-  STA UNPAUSE_BG1_VOFS_LB
-  LDA VOFS_HB
-  STA UNPAUSE_BG1_VOFS_HB
 
-  STZ HOFS_LB 
-  STZ HOFS_HB 
-  STZ VOFS_LB
-  STZ VOFS_HB
-  INC STORED_OFFSETS_SET
-   
-  lda PPU_CONTROL_STATE
-  AND #$FC                 
-  STA PPU_CONTROL_STATE
-  RTL 
 infidelitys_scroll_handling:
 
   LDA $F1

@@ -5,6 +5,7 @@
 .include "registers.inc"
 .include "vars.inc"
 .include "2a03_variables.inc"
+.include "wram_routines.asm"
 .include "2a03_emu_upload.asm"
 .include "hiromheader.asm"
 
@@ -12,8 +13,11 @@
 .include "resetvector.asm"
 
 .segment "EMPTY_SPACE"
-.include "2a03_emulator_first_8000.asm"
+; .include "2a03_emulator_first_8000.asm"
+.include "2a03_emulator_first_8000_total.asm"
 .include "2a03_emulator_second_8000.asm"
+; .include "2a03_emulator_first_8000_nested.asm"
+; .include "2a03_emulator_second_8000_nested.asm"
 
 .include "bank-snes.asm"
 ; these would need to be uncommented
