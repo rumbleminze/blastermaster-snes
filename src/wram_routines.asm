@@ -112,7 +112,7 @@ WriteAPUSq0Ctrl1_I_Y:
     jsr WriteAPUSq1Ctrl1
     rts
 :
-    sta $0901, y
+    sta APUBase+$01, y
     rts
 
 WriteAPUSq0Ctrl2:

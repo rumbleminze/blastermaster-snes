@@ -5,7 +5,10 @@ translate_blaster_master_sprites:
     jsr clear_8_16_extra_sprites
     jslb translate_8by8only_nes_sprites_to_oam, $a0
     bra :++
-: jslb translate_8_by_16_sprites, $a0
+: 
+; jslb translate_8_by_16_sprites, $a0
+  jsr totals_sprite_conversion
+
   STZ NEED_TO_CLEAR_8x16_SPRITES
   INC NEED_TO_CLEAR_8x16_SPRITES
 : jsr clear_sprites_to_f0
@@ -169,6 +172,22 @@ traslation_start:
   INY
   LDA $0200,X
   STA SNES_OAM_START + 0,Y
+  PHA 
+
+  CMP #$F0
+  BNE :+
+  PLA
+  TXA
+  CLC
+  ADC #$07
+  TAX
+  TYA
+  CLC
+  ADC #$07
+  TAY
+  JMP skip_sprite
+
+: PLA
   CLC
   ADC #$08
   BNE :+
@@ -243,6 +262,7 @@ traslation_start:
   CLC
   ADC #$05
   TAY
+skip_sprite:
   BEQ second_half_of_sprites
   JMP traslation_start
   nop
@@ -448,3 +468,138 @@ zero_oam:
   bne :-
   setAXY8
   RTS
+
+
+OAMNES_Y    = $200
+OAMNES_IDX  = $201
+OAMNES_ATTR = $202
+OAMNES_X    = $203
+
+
+OAMSNES_X    = $1000
+OAMSNES_Y    = $1001
+OAMSNES_IDX  = $1002
+OAMSNES_ATTR = $1003
+
+totals_sprite_conversion:
+    PHP
+    PHB
+    PHK
+    PLB
+    setXY16
+    LDA #$00
+    XBA
+    LDX #$0000
+    LDY #$0000
+LoopSprite:
+    ; Y coordinate
+    LDA OAMNES_Y, X
+    CMP #$F0
+    BCS Clear
+
+    ; SEC 
+    ; SBC #!VSpriteOffset
+
+    BIT OAMNES_ATTR, X
+    BMI VFlip
+    STA OAMSNES_Y, Y
+    CLC 
+    ADC #$08
+    STA OAMSNES_Y+$4, Y
+    BRA XCoord
+
+VFlip:
+    STA OAMSNES_Y+$4, Y
+    CLC 
+    ADC #$08
+    STA OAMSNES_Y, Y
+    
+XCoord:
+    ; X coordinate
+    LDA OAMNES_X, X
+    STA OAMSNES_X, Y
+    STA OAMSNES_X+$4, Y
+
+    LDA OAMNES_IDX, X
+    AND #$FE
+    STA OAMSNES_IDX, Y
+    INC
+    STA OAMSNES_IDX+$4, Y
+
+    LDA OAMNES_ATTR, X
+    PHX
+    TAX
+    LDA AttributeTable, X
+    ORA OBJ_CHR_HB
+    PLX
+    STA OAMSNES_ATTR, Y
+
+    LDA OAMNES_IDX, X
+    AND #$01
+    ORA OAMSNES_ATTR, Y
+    STA OAMSNES_ATTR, Y
+    STA OAMSNES_ATTR+$4, Y
+
+    bra Next
+
+;     LDA OAMNES_ATTR, X
+;     AND #$04
+;     BEQ noExtended
+
+;     LDA OAMSNES_ATTR, Y
+;     ORA #$09
+;     STA OAMSNES_ATTR, Y
+;     STA OAMSNES_ATTR + $4, Y
+    
+;     LDA OAMNES_IDX, X
+;     AND #$03
+;     BNE odd
+;     ; For an extended sprite with index 0, 4, 8 etc, set the index of
+;     ; the other sprite to Index+2
+;     LDA OAMNES_IDX+$4, Y
+;     INC
+;     STA OAMNES_IDX+$4, Y
+;     BRA noExtended
+
+; odd:
+;     LDA OAMNES_IDX, Y 
+;     DEC 
+;     STA OAMNES_IDX, Y
+
+; noExtended:
+;     BRA Next
+
+Clear:
+    LDA  #$F0
+    STA OAMSNES_Y, Y
+    STA OAMSNES_Y+$4, Y
+Next:
+    INY
+    INY
+    INY
+    INY
+    INY
+    INY
+    INY
+    INY
+    INX
+    INX
+    INX
+    INX
+    CPX #$0100
+    BEQ :+
+    JMP LoopSprite
+:
+    setAXY8
+    PLB
+    PLP
+    RTS
+
+AttributeTable:
+.byte $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $20, $22, $24, $26, $00, $02, $04, $06 
+.byte $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $00, $02, $04, $06, $60, $62, $64, $66, $60, $62, $64, $66 
+.byte $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $60, $62, $64, $66, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46 
+.byte $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $40, $42, $44, $46, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6 
+.byte $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $A0, $A2, $A4, $A6, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86 
+.byte $80, $82, $84, $86, $80, $82, $84, $86, $80, $82, $84, $86, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4, $E6, $E0, $E2, $E4
+.byte $E6, $E0, $E2, $E4, $E6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4, $C6, $C0, $C2, $C4    

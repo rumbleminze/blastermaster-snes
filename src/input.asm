@@ -1,4 +1,10 @@
 PLAYER_1_INPUT = $F7
+PLAYER_2_INPUT = $F8
+
+PLAYER_1_SNES_CURRENT_INPUT = $80
+PLAYER_1_SNES_NEW_INPUT = $81
+
+
 ; UP_BUTTON       = $08
 ; DOWN_BUTTON     = $04
 ; LEFT_BUTTON     = $02
@@ -32,8 +38,7 @@ augment_input:
     DEX
     BNE :-
 
-    ; we also ready the next bit, which is the SNES "A" button
-    ; and if it's on, treat it as if they've hit both Y and B
+    ; we're also ready the next bit, which is the SNES "A" button
     ; A 
     lda JOYSER0
     AND #$01
@@ -43,6 +48,7 @@ augment_input:
 :   lda JOYSER0
     AND #$01    
     BEQ :+
+
     LDA PLAYER_1_INPUT
     ORA #$44
     STA PLAYER_1_INPUT
@@ -52,9 +58,39 @@ augment_input:
     AND #$01
     BEQ :+
 
-    ; R
+    LDA PLAYER_1_SNES_CURRENT_INPUT
+    BNE :++
+    INC PLAYER_1_SNES_CURRENT_INPUT
+    ; jsr increment_subweapon
+    jsr heal
+    BRA :++
+:   STZ PLAYER_1_SNES_CURRENT_INPUT
+
 :   lda JOYSER0
     AND #$01
     BEQ :+
     
 :   RTL
+
+heal:
+    LDA #$FF
+    STA $040D
+    rts
+
+increment_subweapon:
+    LDA $BA
+    INC 
+    CMP #$03
+    BNE :+
+    STZ $BA
+    RTS
+
+:   STA $BA
+    RTS
+
+decrement_subweapon:
+    DEC $BA
+    BNE :+
+    LDA #$02
+    STA $BA
+:   RTS

@@ -1703,13 +1703,36 @@ nops 1
 .byte $02, $0E, $B2, $6C, $80, $A9, $0B, $85, $C7, $A9, $18, $85, $C8, $A9, $00, $48
 .byte $AA, $BD, $F0, $06, $20, $62, $E8, $20, $CA, $F1, $A5, $C7, $18, $69, $04, $85
 .byte $C7, $68, $18, $69, $01, $C9, $03, $D0, $E6, $60, $A9, $0F, $A2, $1F, $9D, $50
-.byte $06, $CA, $10, $FA, $60, $A9, $01, $85, $52, $A9, $17, $85, $D5, $85, $D4, $20
-.byte $03, $EA, $20, $E1, $FC, $A5, $FF, $09, $20, $85, $FF, $8D, $00, $20, $A9, $00
-.byte $85, $C7, $85, $C8, $20, $BC, $FC, $20, $E9, $E6, $20, $07, $FA, $20, $17, $FA
+.byte $06, $CA, $10, $FA, $60
 
+  LDA #$01
+  STA $52
+  LDA #$17
+  STA $D5
+  STA $D4
+  JSR $EA03
+  JSR $FCE1
+
+  LDA $FF
+  ORA #$20
+  jslb update_ppu_control_from_a_and_store, $a0
+  nops 1
+  ; STA $FF
+  ; STA PpuControl_2000
+  
+  LDA #$00
+  STA $C7
+  STA $C8
+  JSR $FCBC
+  JSR $E6E9
+  JSR $FA07
+  JSR $FA17
+  JSR $FA52
+  JSR $FA60
+  RTS
 
 ; FA00 - bank 7
-.byte $20, $52, $FA, $20, $60, $FA, $60, $A9, $3C, $48, $20, $42, $FC, $20, $36, $E9
+.byte  $A9, $3C, $48, $20, $42, $FC, $20, $36, $E9
 .byte $68, $38, $E9, $01, $D0, $F3, $60, $AD, $F9, $FC, $85, $7A, $AD, $FA, $FC, $85
 .byte $7B, $A0, $00, $A9, $00, $85, $C8, $20, $F8, $FB, $20, $15, $FC, $A5, $C8, $48
 .byte $18, $69, $1D, $C9, $1E, $90, $03, $38, $E9, $1E, $85, $C8, $A9, $0E, $85, $C7
@@ -1761,8 +1784,23 @@ nops 1
 .byte $20, $D1, $EC, $68, $38, $E9, $01, $D0, $EF, $4C, $73, $EC, $20, $FA, $E6, $A2
 .byte $13, $BD, $CD, $FC, $95, $58, $9D, $50, $06, $CA, $10, $F5, $60, $0F, $30, $36
 .byte $11, $0F, $30, $36, $27, $0F, $00, $3C, $15, $0F, $3C, $2C, $1C, $0F, $00, $3C
-.byte $15, $AD, $02, $20, $A9, $23, $8D, $06, $20, $A9, $C0, $8D, $06, $20, $A9, $FF
-.byte $A2, $40, $8D, $07, $20, $CA, $D0, $FA, $60, $FB, $FC, $44, $49, $52, $45, $43
+.byte $15
+
+  jslb set_all_attributes_to_ff, $a0
+  nops 19
+;   LDA RDNMI
+;   LDA #$23
+;   STA VMADDH ; $2006
+;   LDA #$C0
+;   STA VMADDL ; $2006
+;   LDA #$FF
+;   LDX #$40
+; : STA VMDATAL ; $2007
+;   DEX
+;   BNE :
+  RTS
+
+.byte  $FB, $FC, $44, $49, $52, $45, $43
 
 
 ; FD00 - bank 7
@@ -1792,7 +1830,7 @@ nops 1
 .byte $2F, $20, $2F, $20, $20, $20, $20, $43, $48, $49, $41, $4F, $2F, $20, $2F, $20
 
 
-repeat $FF, (70-56)
+repeat $FF, (70-59)
 @bank_switch_to_a:
   PHA
   AND #$0F
@@ -1853,6 +1891,7 @@ repeat $FF, (70-56)
 @set_stack_to_01:
     lda $01
     setAXY16
+    AND #$00FF
     ora #$0100
     tax
     txs

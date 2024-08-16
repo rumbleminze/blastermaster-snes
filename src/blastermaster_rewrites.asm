@@ -270,3 +270,45 @@ column_attributes:
     PLX
     PLA
     rtl
+
+dma_clear_values:
+  .byte $0C, $00
+set_all_attributes_to_ff:
+  PHY
+  PHB
+  PHK
+  PLB
+  LDA #$80
+  STA VMAIN
+
+  setAXY16
+  LDA #$0009
+  STA DMAP0
+
+  LDA #$2000
+  STA VMADDL
+  LDA #$19
+  STA BBAD0
+
+  LDA #$A0
+  STA A1B0
+
+  setAXY8
+  LDA #>dma_clear_values
+
+  STA A1T0H
+  LDA #<dma_clear_values
+
+  STA A1T0L
+  setAXY16
+
+  LDA #$0800
+  STA DAS0L
+
+  LDA #$0001
+  STA MDMAEN
+  setAXY8
+  jslb reset_vmain_to_stored_state, $a0
+  PLB
+  PLY
+  rtl
