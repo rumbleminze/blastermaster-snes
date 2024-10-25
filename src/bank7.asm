@@ -135,7 +135,7 @@ NOP ; TXS
 
 ; drecement lives when dead
 .if DEBUG_MOD = 0
- $C6, $DD
+ .byte $C6, $DD
 .endif
 .if DEBUG_MOD > 0
   NOP
@@ -1230,8 +1230,9 @@ nops 16
   STA $74
   JSR $E895
 
-
   jslb title_screen_palette_updates, $a0
+  ; jslb new_palette_routine, $a0
+  ; jslb new_new_palette, $a0
   nops (47 - 4)
 
 ;   LDA RDNMI ; PpuStatus_2002

@@ -1,5 +1,5 @@
-# NES to SNES Porting Template
-A template and (hopefully) useful routines for porting NES games to the SNES
+# Blaster Master SNES
+A native SNES port of the NES game Blaster Master
 
 ## Prerequisites
 
@@ -34,7 +34,6 @@ A template and (hopefully) useful routines for porting NES games to the SNES
 ## Building
 
 * Update the `build.sh` file with the location of your cc65 install
-* make sure you've extracted and copied the rom banks to `/src`
-* port all the changes you need to port! (magic)
+* make sure you've extracted and copied the chr rom banks to `/src`
 * run `build.sh`
 * The output will be in `out/`

@@ -54,21 +54,22 @@ augment_input:
     STA PLAYER_1_INPUT
 
     ; L
-:   lda JOYSER0
-    AND #$01
-    BEQ :+
+; :   
+;     lda JOYSER0
+;     AND #$01
+;     BEQ :+
 
-    LDA PLAYER_1_SNES_CURRENT_INPUT
-    BNE :++
-    INC PLAYER_1_SNES_CURRENT_INPUT
-    ; jsr increment_subweapon
-    jsr heal
-    BRA :++
-:   STZ PLAYER_1_SNES_CURRENT_INPUT
-
-:   lda JOYSER0
-    AND #$01
-    BEQ :+
+;     LDA PLAYER_1_SNES_CURRENT_INPUT
+;     BNE :++
+;     INC PLAYER_1_SNES_CURRENT_INPUT
+;     ; jsr increment_subweapon
+;     ; jsr heal
+;     BRA :++
+; :   
+;     STZ PLAYER_1_SNES_CURRENT_INPUT
+; :   lda JOYSER0
+;     AND #$01
+;     BEQ :+
     
 :   RTL
 

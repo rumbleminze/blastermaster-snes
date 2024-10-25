@@ -1254,9 +1254,22 @@ b5_a29d:
 .byte $B1
 .byte $BD, $8D, $F2, $07, $C8, $18, $98, $65, $BD, $8D, $F0, $07, $A5, $BE, $69, $00
 .byte $8D, $F1, $07, $AD, $F5, $07, $29, $01, $D0, $2C, $A5, $BF, $0A, $AA, $BD, $BE
-.byte $BD, $85, $BD, $BD, $BF, $BD, $85, $BE, $A0, $00, $B1, $BD, $8D, $10, $40, $C8
-.byte $B1, $BD, $8D, $11, $40, $C8, $B1, $BD, $8D, $12, $40, $C8, $B1, $BD, $8D, $13
-.byte $40, $A9, $1F, $8D, $15, $40, $AD, $F5, $07, $29, $FE, $8D, $F5, $07, $60, $4A
+.byte $BD, $85, $BD, $BD, $BF, $BD, $85, $BE, $A0, $00, $B1, $BD
+
+  STA SNDDMCSADDR4010
+  INY
+  LDA ($BD),Y
+  STA SNDDMCSLEN4011
+  INY
+  LDA ($BD),Y
+  STA SNDCOMONCTRL14012
+  INY
+  LDA ($BD),Y
+  STA SNDCOMONCTRL24013
+  LDA #$1F
+  STA SNDCHANSW4015
+
+.byte $AD, $F5, $07, $29, $FE, $8D, $F5, $07, $60, $4A
 .byte $B0, $17, $AD, $F3, $07, $D0, $07, $B1, $BD, $8D, $F3, $07, $10, $22, $CE, $F3
 .byte $07, $D0, $1D, $C8, $C8, $C8, $4C, $36, $BE, $AD, $F4, $07, $D0, $07, $B1, $BD
 .byte $8D, $F4, $07, $10, $0B, $CE, $F4, $07, $D0, $06, $C8, $C8, $C8, $4C, $36, $BE
