@@ -365,14 +365,8 @@
 .byte $06, $A9, $01, $85, $90, $D0, $31, $A9, $02, $85, $90, $A5, $10, $29, $07, $C9
 .byte $03, $D0, $05, $A9, $30, $20, $CC, $DE
 
-.if DEBUG_MOD > 0
-    NOP
-    NOP
-.endif
-.if DEBUG_MOD = 0
     ; use hover
     DEC $92
-.endif
  
 .byte $A5, $4D, $38, $E9, $01, $10
 .byte $12, $24, $98, $10, $08, $C9, $F8, $B0, $0A, $A9, $F8, $D0, $06, $C9, $F0, $B0

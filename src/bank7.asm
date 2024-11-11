@@ -79,8 +79,23 @@ LDX #$FF
 NOP ; TXS
  
 .byte $A9
-.byte $80, $8D, $F3, $06, $20, $C2, $DE, $20, $5D, $F4, $D0, $1F, $A9, $08, $85, $14
-.byte $20, $BA, $CD, $20, $D9, $F5, $A9, $05, $8D, $7E, $03, $A9, $00, $8D, $FE, $03
+.byte $80, $8D, $F3, $06, $20, $C2, $DE, $20, $5D, $F4, $D0, $1F
+
+; this triggers starting the game
+  ; LDA #$08
+  ; STA $14
+  jslb start_new_game_or_load_save, $a0
+
+.byte $20, $BA, $CD, $20, $D9, $F5
+
+; new game, set continues based on options
+  jslb handle_limited_continues_new_game_l, $a0
+  nops 1
+  ; LDA #$05
+  ; STA $037E
+
+
+.byte $A9, $00, $8D, $FE, $03
 .byte $8D, $FB, $03, $8D, $FC, $03, $85, $99, $4C, $FB, $C2, $20, $C2, $DE, $EE, $F4
 .byte $06, $AD, $F4, $06, $29, $03, $8D, $F4, $06, $AA, $BD, $F7, $C2, $85, $14, $A9
 .byte $83, $8D, $F3, $06, $4C, $01, $C3, $08, $01, $0A, $03, $A5, $14, $09, $08, $85
@@ -90,9 +105,23 @@ NOP ; TXS
 .byte $14
   LDA #$02
   STA $DD
-.byte $20, $14, $CA, $A9, $00, $85, $13, $85, $10, $85, $11
-.byte $8D, $F0, $06, $8D, $F1, $06, $8D, $F2, $06, $85, $92, $A9, $FF, $85, $C1, $A9
-.byte $03, $85, $46, $20, $B2, $C5, $AD, $F3, $06, $0A, $D0, $08, $A9, $00, $20, $92
+  JSR $CA14
+  LDA #$00
+  STA $13
+  STA $10
+  STA $11
+  ; this is a slight deviation from vanilla
+  ; by preventing zeroing out the ammo on continue
+  nops 9
+  ; STA $06F0
+  ; STA $06F1
+  ; STA $06F2
+  STA $92
+  LDA #$FF
+  STA $C1
+  LDA #$03
+
+.byte $85, $46, $20, $B2, $C5, $AD, $F3, $06, $0A, $D0, $08, $A9, $00, $20, $92
 .byte $E6, $20, $D1, $F7, $A9, $00, $85, $C5, $85, $15, $85, $B7, $85, $C3, $85, $90
 .byte $85, $4C, $85, $4D, $85, $50, $85, $4F, $85, $47, $85, $94, $85, $8F, $A9, $FF
 .byte $85, $53, $8D, $FF, $03, $20, $E3, $D7, $20, $A9, $CB, $20, $43, $E2, $A9, $00
@@ -134,15 +163,12 @@ NOP ; TXS
 .byte $D0, $28, $A9, $3D, $20, $CC, $DE
 
 ; drecement lives when dead
-.if DEBUG_MOD = 0
- .byte $C6, $DD
-.endif
-.if DEBUG_MOD > 0
-  NOP
-  NOP
-.endif
+  ; DEC $DD
+  ; BPL $C551
+  jmp @life_lost
+  nop
 
-.byte $10, $16, $CE, $7E, $03, $F0, $1A
+.byte $CE, $7E, $03, $F0, $1A
 .byte $20, $1C, $F7, $D0, $15, $20, $BA, $CD, $A5, $14, $09, $08, $85, $14, $4C, $FB
 .byte $C2, $20, $FA, $C5, $20, $BA, $CD, $4C, $26, $C3, $4C, $9E, $C2, $A9, $00, $20
 .byte $1B, $E6, $20, $33, $F8, $A9, $18, $20, $CC, $DE, $4C, $5E, $C3, $20, $C2, $DE
@@ -208,8 +234,19 @@ NOP ; TXS
 .byte $76, $DD, $85, $7A, $AD, $77, $DD, $85, $7B, $A0, $00, $A0, $05, $B1, $7A, $99
 .byte $00, $00, $88, $10, $F8, $C8, $A2, $00, $B1, $00, $C5, $14, $D0, $0C, $B1, $02
 .byte $C5, $49, $D0, $06, $B1, $04, $C5, $4B, $F0, $0D, $C8, $D0, $EB, $60, $E6, $01
-.byte $E6, $03, $E6, $05, $4C, $A8, $C7, $98, $49, $01, $A8, $B1, $00, $85, $14, $B1
-.byte $02, $85, $49, $B1, $04, $85, $4B, $60, $AD, $F8, $C7, $85, $7A, $AD, $F9, $C7
+.byte $E6, $03, $E6, $05, $4C, $A8, $C7, $98, $49, $01, $A8
+
+;c7cb  updating area value
+  ; LDA ($00),Y
+  ; STA $14
+  jslb update_area_info_and_save, $a0
+  LDA ($02),Y
+  STA $49
+  LDA ($04),Y
+  STA $4B
+  RTS
+
+.byte $AD, $F8, $C7, $85, $7A, $AD, $F9, $C7
 .byte $85, $7B, $A0, $00, $A9, $00, $85, $3E, $85, $3F, $85, $44, $A5, $FF, $29, $20
 .byte $D0, $03, $4C, $80, $C8, $4C, $16, $C8, $FA, $C7, $FE, $C7, $06, $C8, $10, $80
 
@@ -1831,7 +1868,7 @@ nops 1
 .byte $2F, $20, $2F, $20, $20, $20, $20, $43, $48, $49, $41, $4F, $2F, $20, $2F, $20
 
 
-repeat $FF, (70-59)
+repeat $FF, (70-69)
 @bank_switch_to_a:
   PHA
   AND #$0F
@@ -1854,10 +1891,8 @@ repeat $FF, (70-59)
   RTS
 
 @exit_from_interrupt:
-  PLA
-  TAY
-  PLA
-  TAX
+  PLY
+  PLX
   PLA
   jmlb return_from_nes_nmi, $00
 
@@ -1898,6 +1933,12 @@ repeat $FF, (70-59)
     txs
     setAXY8
     jmp @return_from_stack_set
+
+@life_lost:
+  jslb handle_limited_lives, $a0
+  bpl :+
+  jmp $C53B
+: jmp $C551  
 
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF

@@ -52,7 +52,6 @@ augment_input:
     LDA PLAYER_1_INPUT
     ORA #$44
     STA PLAYER_1_INPUT
-
     ; L
 ; :   
 ;     lda JOYSER0

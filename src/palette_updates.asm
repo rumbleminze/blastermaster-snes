@@ -1,5 +1,6 @@
 PALETTE_START = $0B00
 PALETTE_PTR = $90
+
 new_palette_routine:
   PHY
   PHX

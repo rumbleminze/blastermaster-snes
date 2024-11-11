@@ -193,6 +193,7 @@ initialize_registers:
   JSL upload_sound_emulator_to_spc
   jsr write_sound_wram_routines
   JSR do_intro
+  JSR show_options_screen
 
 intro_done:
   STZ TM      
@@ -264,6 +265,7 @@ intro_done:
     STA HDMAEN
 
     JSR dma_oam_table
+    JSR handle_hover_recharge
     RTL
 
 clear_bg_jsl:
@@ -467,6 +469,9 @@ dma_values:
   .include "windows.asm"
   .include "blastermaster_rewrites.asm"
   .include "input.asm"  
+  .include "save_game_handling.asm"
+  .include "options_screen.asm"
+  .include "qol.asm"
   ; .include "wram_routines.asm"
 
 
