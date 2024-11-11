@@ -1,5 +1,32 @@
 # Blaster Master SNES
-A native SNES port of the NES game Blaster Master
+Blaster Master SNES Port - V 1.1
+
+This is a 1:1 port of the NES version of Blaster Master, running on the SNES. It is utilizing FastROM/HiROM.
+
+This has been tested in Mesen2, a Taki Udon Mister setup, and on original hardware via FxPak Pro.
+
+## Additional Features
+
+The "X" button will act as if you pressed both Down and Y, which will fire your selected special weapon while in the tank.
+
+Addtionally, the following Quality of Life options are available:
+1. Choice of two palettes, the default Mesen2 NES palette, or the default FCEUX palette
+2. Turn on hover recharge while idle - this will slowly fill your hover gauge as long as you're on the ground not moving.
+3. Gun Degrade - FULL (1 bar lost per hit), or 1/4 (lose at 1/4 the rate, although the first hit will drop you down a level)
+4. Continues - either unlimited or the original limit of 4
+5. Lives - either unlimited or the original limit of 3
+6. Saving - The game will automatically save periodically, including when you reach a new area or pick up a key item.  You can choose to load this save when you start the game, which will start you at the beginning of the area you were in, with your items, lives, continues, and sub weapon counts in tact.  You can also choose to change any of the QoL options when you load your save.
+
+## KNOWN ISSUES
+* Occassional sprite garbage frames from overload of sprites, and being unable to finish translating them before NMI occurs.
+
+## WHAT & HOW TO REPORT TO ME
+If you encounter issues and would like to report them to me, please reach out to @rumbleminze.bsky.social on Blue Sky
+
+
+Happy Gaming!
+-Rumbleminze
+
 
 ## Prerequisites
 
