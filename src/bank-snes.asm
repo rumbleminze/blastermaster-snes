@@ -192,6 +192,15 @@ initialize_registers:
   ; STZ COLUMN_2_DMA
   JSL upload_sound_emulator_to_spc
   jsr write_sound_wram_routines
+
+  STZ MSU_ENABLE
+  jslb check_if_msu_is_available, $b2
+  LDA MSU_AVAILABLE
+  beq :+
+    LDA #$01
+    STA MSU_ENABLE
+    jslb check_for_all_tracks_present, $b2
+  :
   JSR do_intro
   JSR show_options_screen
 
@@ -245,7 +254,6 @@ intro_done:
 
   snes_nmi:
     LDA RDNMI 
-    
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
     jslb setup_hdma, $a0
@@ -448,14 +456,8 @@ msu_movie_rti:
 dma_values:
   .byte $00, $00
 
-.if ENABLE_MSU = 1
-  .include "msu_intro_screen.asm"
-.endif
 
-.if ENABLE_MSU = 0
   .include "intro_screen.asm"
-.endif
-
   .include "konamicode.asm"
   .include "palette_updates.asm"
   .include "palette_lookup.asm"
@@ -464,8 +466,8 @@ dma_values:
   .include "hardware-status-switches.asm"
   .include "scrolling.asm"
   .include "attributes.asm"
-  .include "hdma_scroll_lookups.asm"
   .include "2a03_conversion.asm"
+  .include "hdma_scroll_lookups.asm"
   .include "windows.asm"
   .include "blastermaster_rewrites.asm"
   .include "input.asm"  

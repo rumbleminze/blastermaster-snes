@@ -1,8 +1,8 @@
 PLAYER_1_INPUT = $F7
 PLAYER_2_INPUT = $F8
 
-PLAYER_1_SNES_CURRENT_INPUT = $80
-PLAYER_1_SNES_NEW_INPUT = $81
+PLAYER_1_INPUT_SNES = $EE
+PLAYER_1_INPUT_SNES_HELD = $EF
 
 
 ; UP_BUTTON       = $08
@@ -14,6 +14,15 @@ PLAYER_1_SNES_NEW_INPUT = $81
 ; B_BUTTON        = $40
 ; START_BUTTON    = $10
 ; SELECT_BUTTON   = $20
+
+    ; X = 08
+    ; A = 04
+    ; L = 02
+    ; R = 01
+.define SNES_A_BUTTON #$08
+.define SNES_X_BUTTON #$04
+.define SNES_L_BUTTON #$02
+.define SNES_R_BUTTON #$01
 
 augment_input:
 
@@ -38,39 +47,48 @@ augment_input:
     DEX
     BNE :-
 
-    ; we're also ready the next bit, which is the SNES "A" button
-    ; A 
-    lda JOYSER0
-    AND #$01
-    BEQ :+
+    STZ PLAYER_1_INPUT_SNES
+    ; read other 4 SNES buttons    
 
-    ; X - treat as down + Y
-:   lda JOYSER0
-    AND #$01    
-    BEQ :+
+    LDX #$04
 
+:   LDA JOYSER0 ; Ctrl1_4016
+    AND #$03
+    CMP #$01
+    ROL PLAYER_1_INPUT_SNES
+
+    ; LDA JOYSER1 ; Ctrl2_FrameCtr_4017
+    ; AND #$03
+    ; CMP #$01
+    ; ROL PLAYER_2_INPUT_SNES
+
+    DEX
+    BNE :-
+
+    LDA PLAYER_1_INPUT_SNES
+    PHA    
+    LDA PLAYER_1_INPUT_SNES
+    EOR PLAYER_1_INPUT_SNES_HELD
+    AND PLAYER_1_INPUT_SNES
+    STA PLAYER_1_INPUT_SNES
+    PLA
+    STA PLAYER_1_INPUT_SNES_HELD
+
+    lda PLAYER_1_INPUT_SNES
+    AND SNES_X_BUTTON
+    Beq :+
     LDA PLAYER_1_INPUT
-    ORA #$44
+    ORA #(DOWN_BUTTON + B_BUTTON)
     STA PLAYER_1_INPUT
-    ; L
-; :   
-;     lda JOYSER0
-;     AND #$01
-;     BEQ :+
-
-;     LDA PLAYER_1_SNES_CURRENT_INPUT
-;     BNE :++
-;     INC PLAYER_1_SNES_CURRENT_INPUT
-;     ; jsr increment_subweapon
-;     ; jsr heal
-;     BRA :++
-; :   
-;     STZ PLAYER_1_SNES_CURRENT_INPUT
-; :   lda JOYSER0
-;     AND #$01
-;     BEQ :+
-    
-:   RTL
+:   
+    LDA PLAYER_1_INPUT_SNES_HELD
+    AND SNES_R_BUTTON
+    beq :+
+    LDA PLAYER_1_INPUT
+    ORA #(A_BUTTON)
+    STA PLAYER_1_INPUT
+:
+    RTL
 
 heal:
     LDA #$FF

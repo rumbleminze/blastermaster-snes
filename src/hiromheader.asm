@@ -1,6 +1,6 @@
 .segment "HEADER"
-      
-.byte "CHIP N DALE SNES V0.1" ; ROM name, must be 21 chars
+;      123456789012345678901      
+.byte "BLASTER MASTER V 1.2 " ; ROM name, must be 21 chars
        
                 
 .segment "ROMSPEC"

@@ -51,6 +51,19 @@ option_tiles:
 ; PRESS START
 .byte $64, $21, $0B, P6, $29, P6, $2b, P6, $1e, P6, $2c, P6, $2c, P6, $34, P6, $2c, P6, $2d, P6, $1a, P6, $2b, P6, $2d
 
+; PRESS SELECT FOR MSU-1 OPTIONS
+.addr $2277
+.byte $05, P6, $29, P6, $2b, P6, $1e, P6, $2c, P6, $2c; PRESS 
+
+.addr $2297
+.byte $06, P6, $2c, P6, $1e, P6, $25, P6, $1e, P6, $1c, P6, $2d ; SELECT
+
+.addr $22B7
+.byte $08, P6, $1f, P6, $28, P6, $2b, P6, $34, P6, $26, P6, $2c, P6, $2e, P6, $11 ; FOR MSU1       
+
+.addr $22D7
+.byte $07, P6, $28, P6, $29, P6, $2d, P6, $22, P6, $28, P6, $27, P6, $2C ; OPTIONS
+
 P0 = $00
 P1 = $04
 P2 = $08
@@ -84,10 +97,69 @@ P3_3 = $1E
 
 .byte $FF
 
+
+
+; blanks out the MSU option text if it's not available.
 msu_unavailable_tiles:
-.byte $AB, $20, $44, $3d, $30, $45, $30, $38, $3B, $30, $31, $3B, $34
+; PRESS SELECT FOR MSU-1 OPTIONS
+.addr $2277
+.byte $05, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34; PRESS 
+
+.addr $2297
+.byte $06, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34 ; SELECT
+
+.addr $22B7
+.byte $08, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34 ; FOR MSU1       
+
+.addr $22D7
+.byte $07, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34, P6, $34 ; OPTIONS
+.byte $FF
+
+hide_msu1_option_text:
+   setXY16
+    LDY #$0000
+
+hide_msu1_line_draw:
+    ; get starting address
+    LDA msu_unavailable_tiles, Y
+    CMP #$FF
+    BEQ exit_hide_msu
+
+    PHA
+    INY    
+    LDA msu_unavailable_tiles, Y
+    STA VMADDH
+    PLA
+    STA VMADDL
+    INY
+    LDA msu_unavailable_tiles, Y
+    TAX
+    INY
+
+:   LDA msu_unavailable_tiles, Y
+    STA VMDATAH
+    INY
+    LDA msu_unavailable_tiles, Y
+    STA VMDATAL
+    INY
+    DEX
+    BEQ hide_msu1_line_draw
+    BRA :-
+
+exit_hide_msu:
+    setAXY8
+    RTS    
 
 show_options_screen:
+
+    LDX #$20
+    LDA RDNMI
+    : LDA RDNMI
+    BPL :-
+    DEX
+    BPL :-
+
+
     STZ CURR_OPTION
 
     LDA VMAIN_STATE
@@ -165,8 +237,18 @@ input_loop:
     bra input_loop
 
 :   CMP #START_BUTTON
-    BEQ exit_options
-    BRA input_loop
+    BNE:+
+    bra exit_options
+    
+:   CMP #SELECT_BUTTON
+    BNE input_loop
+    
+    LDA MSU_AVAILABLE
+    beq input_loop
+
+    jslb persist_save_data, $a0
+    JSR show_msu_track_screen
+    JMP show_options_screen
 
 exit_options:
     jsr clear_extra_palattes
@@ -180,10 +262,26 @@ exit_options:
     BNE :-
 
     STZ CURR_OPTION
+
+    ; ; for now go to MSU- would like this to happen when we hit SELECT or something
+    ; jsr show_msu_track_screen
+
     LDA INIDISP_STATE
     STA INIDISP
 
     RTS
+
+clear_sprites:
+    LDA #$F0
+    LDY #$00
+:   STA SNES_OAM_START+1, Y
+    INY
+    INY
+    INY
+    INY
+    BNE :-
+    rts
+
 
 clear_extra_palattes:
     LDA RDNMI
@@ -512,6 +610,12 @@ next_option_bg_line:
 
 exit_options_write:
     setAXY8
+
+    LDA MSU_AVAILABLE
+    bne :+
+    jsr hide_msu1_option_text
+    :
+
     RTS
 
 
@@ -648,12 +752,12 @@ write_current_save_level_deets:
     rts
 
 new_game_tiles:
-.byte P3, $27, P3, $28, P3, $34, P3, $2c, P3, $1a, P3, $2f, P3, $1e
+.byte P3, $34, P3, $34, P3, $27, P3, $28, P3, $34, P3, $2c, P3, $1a, P3, $2f, P3, $1e
 ; new game info
 write_new_game:
     LDA #$21
     STA VMADDH
-    LDA #$04
+    LDA #$02
     STA VMADDL
 
     LDY #$00
@@ -666,7 +770,7 @@ write_new_game:
     STA VMDATAL
     INY
     INX
-    CPX #$07
+    CPX #$09
     BNE :-
 
     rts
@@ -690,10 +794,10 @@ options_sprites:
 .byte 128, 192, $0C, $20 ; tank sprite 5/6
 .byte 136, 192, $40, $20 ; tank sprite 6/6
 
-.byte 104, 184, $F9, $20 ; Enemy Sprint x/4
-.byte  96, 184, $E9, $20 ; Enemy Sprint x/4
-.byte 104, 192, $FB, $20 ; Enemy Sprint x/4
-.byte  96, 192, $EB, $20 ; Enemy Sprint x/4
+.byte 104, 184, $F9, $20 ; Enemy Sprite x/4
+.byte  96, 184, $E9, $20 ; Enemy Sprite x/4
+.byte 104, 192, $FB, $20 ; Enemy Sprite x/4
+.byte  96, 192, $EB, $20 ; Enemy Sprite x/4
 
 
 .byte $FF
@@ -762,3 +866,5 @@ single_color_tiles:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+
+.include "msu_track_selection_screen.asm"

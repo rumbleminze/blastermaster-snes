@@ -1,4 +1,8 @@
 translate_blaster_master_sprites:
+  lda SPRITE_TRANSLATION_UNREADY
+  beq :+
+    rtl
+  :
   lda PPU_CONTROL_STATE
   and #$20
   bne :+

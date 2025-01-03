@@ -1294,9 +1294,12 @@ b5_a29d:
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 ; .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-repeat $ff, 46
+repeat $ff, 42
+; this stops playback
 sound_hijack_3:
   JSR $8000
+  ; when stopping playback, pause MSU-1 if playing
+  jslb stop_msu_only, $b2
   bra :+
 
 sound_hijack:

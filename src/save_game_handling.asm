@@ -38,7 +38,7 @@ SAVE_ITEMS = ((save_game_read_locations_end - save_game_read_locations) / 2)
 CHECK_BYTE = SAVE_GAME_WRITE + SAVE_ITEMS
 
 update_item_pickup_and_save:
-     ORA $99
+    ORA $99
     STA $99
     jmp persist_save_data
 

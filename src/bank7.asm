@@ -132,8 +132,17 @@ NOP ; TXS
 .byte $DC, $A5, $C5, $29, $02, $F0, $03, $20, $42, $C7, $20, $72, $C7, $A9, $00, $85
 .byte $8E, $A9, $00, $85, $56, $20, $28, $C9, $20, $D6, $C9, $20, $B6, $D7, $20, $0F
 .byte $CE, $A5, $C5, $2C, $E1, $E6, $F0, $0D, $A9, $00, $85, $56, $20, $DF, $C8, $20
-.byte $00, $00, $4C, $65, $C4, $20, $36, $E9, $20, $71, $C9, $20, $83, $D8, $20, $D0
-.byte $CD, $20, $4B, $CA, $20, $D8, $C7, $20, $42, $C6, $A5, $B6, $C9, $09, $B0, $75
+.byte $00, $00, $4C, $65, $C4, $20, $36, $E9
+
+; sprite update routines
+  jsr @block_sprite_translation
+  JSR $D883
+  JSR $CDD0
+  JSR $CA4B
+  ; this is the last one, we hijack this to enable sprite translation
+  JSR @finalize_sprites_ready ; JSR $C7D8
+
+.byte $20, $42, $C6, $A5, $B6, $C9, $09, $B0, $75
 .byte $A5, $B6, $D0, $0E, $AD, $F3, $06, $C9, $FF, $D0, $07, $CE, $F3, $06, $A9, $09
 
 
@@ -684,12 +693,31 @@ NOP ; TXS
 .byte $29, $77, $29, $57, $19, $59, $19, $69, $07, $49, $3F, $49, $4B, $7A, $6B, $69
 .byte $77, $29, $20, $05, $DF, $20, $E5, $BF, $20, $0A, $DF, $60, $85, $E1, $8A, $48
 .byte $A2, $07, $BD, $70, $03, $F0, $06, $C5, $E1, $D0, $0A, $F0, $0B, $A5, $E1, $9D
-.byte $70, $03, $4C, $E8, $DE, $CA, $10, $EA, $68, $AA, $60, $A9, $07, $48, $AA, $BD
-.byte $70, $03, $F0, $03, $20, $E8, $BF, $68, $AA, $A9, $00, $9D, $70, $03, $CA, $8A
+.byte $70, $03, $4C, $E8, $DE, $CA, $10, $EA, $68, $AA, $60
+
+
+; play track / sfx at $0377
+  LDA #$07
+: PHA
+
+  ; TAX
+  ; LDA $0370,X
+  jslb play_track_hijack, $b2
+
+  BEQ :+
+  JSR $BFE8
+: PLA
+  TAX
+  LDA #$00
+  STA $0370,X
+  DEX
+  TXA
+  BPL :--
+  JMP $BFF1
 
 
 ; DF00 - bank 7
-.byte $10, $EB, $4C, $F1, $BF, $A9, $05, $4C, $1B, $E6, $A5, $D3, $4C, $1B, $E6, $A9
+.byte $A9, $05, $4C, $1B, $E6, $A5, $D3, $4C, $1B, $E6, $A9
 .byte $D2, $85, $00, $A2, $70, $20, $CF, $D7, $F0, $0A, $86, $A5, $20, $27, $DF, $A6
 .byte $A5, $A9, $01, $60, $A9, $00, $60, $A0, $00, $B9, $46, $00, $9D, $00, $04, $E8
 .byte $C8, $C0, $0E, $D0, $F4, $60, $A5, $11, $29, $4C, $D0, $07, $20, $71, $EB, $29
@@ -937,7 +965,17 @@ nops 16
 ;   LDA #$02
 ;   STA SpriteDma_4014
   RTS
-  nops 15
+
+@block_sprite_translation:
+  inc SPRITE_TRANSLATION_UNREADY
+  JSR $C971
+  rts
+
+@finalize_sprites_ready:
+  JSR $C7D8
+  stz SPRITE_TRANSLATION_UNREADY
+  RTS
+  nops 1
 
 .byte $A5, $F0, $29, $C0, $8D, $03, $20, $AA, $A0
 .byte $40, $BD, $00, $02, $8D, $04, $20, $E8, $88, $D0, $F6, $86, $F0, $60, $00
@@ -1028,9 +1066,27 @@ nops 16
 ;   STA $FF
   RTS
 
-.byte $A5, $F7, $85, $F5, $A5, $F8, $85
-.byte $F6, $20, $14, $E9, $A5, $F7, $48, $20, $14, $E9, $68, $C5, $F7, $F0, $03, $20
-.byte $14, $E9, $A5, $F7, $85, $DE, $A5, $F8, $85, $DF, $20, $C1, $E2, $20, $87, $E2
+; E8A9 - Input reading
+  LDA $F7
+  STA $F5
+  LDA $F8
+  STA $F6
+  JSR $E914
+  BRA :+
+  ; we've re-arranged this to skipp all this double checking.
+  LDA $F7
+  PHA
+  JSR $E914
+  PLA
+  CMP $F7
+  JSR $E914
+: LDA $F7
+  STA $DE
+  LDA $F8
+  STA $DF
+  JSR $E2C1
+
+.byte $20, $87, $E2
 .byte $A2, $01, $B5, $F7, $55, $F5, $35, $F7, $95, $F5, $CA, $10, $F5, $A5, $F5, $85
 .byte $F3, $A5, $F6, $85, $F4, $A5, $F5, $05, $F6, $D0, $1C, $A5, $F7, $05, $F8, $F0
 .byte $16, $E6, $78, $A5, $78, $C9, $19, $90, $12, $A5, $F7, $85, $F5, $A5, $F8, $85
@@ -1334,10 +1390,34 @@ nops 1
   nops 17
 
 .byte $A5, $3C, $F0, $3C, $AD, $BE, $E6, $D0, $05, $A5, $11, $4A, $B0
-.byte $09, $A5, $3D, $A8, $18, $65, $3C, $90, $0E, $60, $A5, $3D, $38, $E5, $3C, $B0
-.byte $05, $A9, $00, $38, $E5, $3C, $A8, $85, $3D, $A2, $00, $BD, $00, $06, $99, $00
-.byte $02, $E8, $C8, $BD, $00, $06, $99, $00, $02, $E8, $C8, $E4, $3C, $D0, $EC, $A9
-.byte $00, $85, $3C, $60, $A6, $3C, $A5, $3E, $9D, $03, $06, $A5, $44, $9D, $02, $06
+.byte $09, $A5, $3D, $A8, $18, $65, $3C, $90, $0E, $60
+
+; ec8a - draw sprite from $600 to sprite table
+  LDA $3D
+  SEC
+  SBC $3C
+  BCS :+
+  LDA #$00
+  SEC
+  SBC $3C
+: TAY
+  STA $3D
+  LDX #$00
+: LDA $0600,X
+  STA $0200,Y
+  INX
+  INY
+  LDA $0600,X
+  STA $0200,Y
+  INX
+  INY
+  CPX $3C
+  BNE :-
+  LDA #$00
+  STA $3C
+  RTS
+
+.byte  $A6, $3C, $A5, $3E, $9D, $03, $06, $A5, $44, $9D, $02, $06
 .byte $A5, $45, $9D, $01, $06, $A5, $3F, $9D, $00, $06, $8A, $18, $69, $04, $85, $3C
 .byte $60, $A6, $3C, $A5, $3E, $38, $E9, $04, $24, $44, $70, $0C, $9D, $03, $06, $18
 .byte $69, $08, $9D, $07, $06, $4C, $F1, $EC, $9D, $07, $06, $18, $69, $08, $9D, $03

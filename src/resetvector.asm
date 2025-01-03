@@ -40,7 +40,8 @@ nmi:
 
 return_from_nes_nmi:
     ; jslb setup_hdma, $a0
-    ; handle sprite traslation last, since if that bleeds out of vblank it's ok
+    ; handle sprite traslation last, since if that bleeds out of vblank it's ok    
+    jslb msu_nmi_check, $b2
     jslb translate_blaster_master_sprites, $a0
     PLY
     PLX

@@ -374,8 +374,19 @@
 .byte $30, $06, $A9, $00, $85, $4D, $F0, $1E, $E6, $4D, $E6, $4D, $24, $98, $30, $0A
 .byte $A9, $40, $A2, $4D, $20, $14, $EB, $4C, $76, $93, $A5, $4D, $30, $08, $C9, $08
 .byte $90, $04, $A9, $08, $85, $4D, $20, $7A, $D3, $D0, $5F, $A5, $4A, $C9, $80, $F0
-.byte $03, $4C, $32, $94, $A9, $11, $20, $B1, $D2, $30, $03, $4C, $32, $94, $A5, $99
-.byte $29, $0C, $C9, $0C, $F0, $03, $4C, $32, $94, $A5, $F7, $29, $03, $AA, $A5, $48
+.byte $03, $4C, $32, $94, $A9, $11, $20, $B1, $D2, $30, $03, $4C, $32, $94
+
+; wall 1/2 checks
+;   LDA $99
+;   AND #$0C
+  jsr wall_check
+  nops 1
+  CMP #$0C
+  BEQ :+
+  JMP $9432
+: LDA $F7
+
+.byte $29, $03, $AA, $A5, $48
 .byte $C9, $40, $90, $17, $C9, $C0, $B0, $03, $4C, $32, $94, $E0, $01, $F0, $03, $4C
 .byte $32, $94, $A0, $C0, $A9, $00, $48, $A9, $12, $D0, $0E, $E0, $02, $F0, $03, $4C
 .byte $32, $94, $A0, $40, $A9, $01, $48, $A9, $10, $20, $B1, $D2, $30, $08, $68, $85
@@ -1183,22 +1194,24 @@
 
 
 ; BE00 - bank 6
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+wall_check:
+  LDA $99
+  AND #$0C
+  PHA
+  LDA PLAYER_1_INPUT_SNES_HELD
+  AND SNES_L_BUTTON
+  beq :+
+    PLA
+    LDA #$00
+    rts
+  :
+  PLA
+  rts
+
+repeat $ff, $2f
+repeat $ff, $40
+repeat $ff, $40
+repeat $ff, $40
 
 
 ; BF00 - bank 6
